@@ -9,10 +9,9 @@ import {
     Notice,
     Modal
 } from 'obsidian';
-import { google, calendar_v3 } from 'googleapis';
+import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
-import flatpickr from 'flatpickr';
-import 'flatpickr/dist/flatpickr.min.css';
+import { format } from 'date-fns';
 
 interface GCalReminderSettings {
     clientId: string;
@@ -21,9 +20,7 @@ interface GCalReminderSettings {
 }
 
 class DateTimePickerModal extends Modal {
-    result: Date | null = null;
     onSubmit: (result: Date) => void;
-    picker: flatpickr.Instance;
 
     constructor(app: App, onSubmit: (result: Date) => void) {
         super(app);
@@ -36,44 +33,49 @@ class DateTimePickerModal extends Modal {
 
         contentEl.createEl('h2', { text: 'Set Reminder Date and Time' });
 
-        // Create input for flatpickr
-        const dateTimeInput = contentEl.createEl('input', {
-            type: 'text',
-            attr: { placeholder: 'Select date and time...' }
+        // Create container for the picker
+        const pickerContainer = contentEl.createDiv({ cls: 'datetime-picker-container' });
+        
+        // Create datetime picker
+        const dateTimeInput = pickerContainer.createEl('input', {
+            type: 'datetime-local',
+            cls: 'datetime-input'
         });
 
-        // Initialize flatpickr
-        this.picker = flatpickr(dateTimeInput, {
-            enableTime: true,
-            dateFormat: "Y-m-d H:i",
-            defaultDate: new Date(),
-            defaultHour: new Date().getHours() + 1,
-            minuteIncrement: 5,
-            onChange: (selectedDates) => {
-                if (selectedDates[0]) {
-                    this.result = selectedDates[0];
-                }
-            }
+        // Set default to next hour
+        const now = new Date();
+        now.setHours(now.getHours() + 1, 0, 0, 0);
+        dateTimeInput.value = now.toISOString().slice(0, 16);
+
+        // Create button container
+        const buttonContainer = contentEl.createDiv({ 
+            cls: 'datetime-picker-buttons',
+            attr: { style: 'margin-top: 20px;' }
         });
 
         // Create submit button
-        const submitBtn = contentEl.createEl('button', { 
+        const submitBtn = buttonContainer.createEl('button', { 
             text: 'Create Reminder',
             cls: 'mod-cta'
         });
-        submitBtn.style.marginTop = '20px';
+        
         submitBtn.addEventListener('click', () => {
-            if (this.result) {
+            const selectedDate = new Date(dateTimeInput.value);
+            if (!isNaN(selectedDate.getTime())) {
                 this.close();
-                this.onSubmit(this.result);
+                this.onSubmit(selectedDate);
             } else {
-                new Notice('Please select a date and time');
+                new Notice('Please select a valid date and time');
             }
         });
+
+        // Add some basic styles
+        pickerContainer.style.textAlign = 'center';
+        dateTimeInput.style.margin = '20px 0';
+        dateTimeInput.style.padding = '8px';
     }
 
     onClose() {
-        this.picker.destroy();
         const { contentEl } = this;
         contentEl.empty();
     }
@@ -86,9 +88,6 @@ export default class GCalReminderPlugin extends Plugin {
     async onload() {
         await this.loadSettings();
         this.setupGoogleAuth();
-
-        // Load Flatpickr CSS
-        this.loadFlatpickrStyles();
 
         // Add command to create reminder
         this.addCommand({
@@ -108,13 +107,6 @@ export default class GCalReminderPlugin extends Plugin {
 
         // Add settings tab
         this.addSettingTab(new GCalReminderSettingTab(this.app, this));
-    }
-
-    loadFlatpickrStyles() {
-        const linkEl = document.createElement('link');
-        linkEl.rel = 'stylesheet';
-        linkEl.href = 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css';
-        document.head.appendChild(linkEl);
     }
 
     setupGoogleAuth() {
@@ -171,16 +163,13 @@ export default class GCalReminderPlugin extends Plugin {
                 }
             });
 
-            // Format datetime in YYYY-MM-DD HH:mm format
-            const formattedDateTime = date.toISOString()
-                .replace(/T/, ' ')
-                .replace(/\..+/, '')
-                .slice(0, 16);
+            // Format the datetime string
+            const formattedDateTime = format(date, 'yyyy-MM-dd HH:mm');
 
-            // Create event URL
-            const calendarUrl = `https://calendar.google.com/calendar/event?eid=${event.data.htmlLink?.split('eid=')[1]}`;
+            // Get the calendar URL
+            const calendarUrl = event.data.htmlLink || '';
             
-            // Update the line with the new format
+            // Update the line with the new format: text ^blockId #reminder (datetime)[gcal_URL]
             const updatedLine = `${line} ^${blockId} #reminder (${formattedDateTime})[${calendarUrl}]`;
             editor.setLine(cursor.line, updatedLine);
 
