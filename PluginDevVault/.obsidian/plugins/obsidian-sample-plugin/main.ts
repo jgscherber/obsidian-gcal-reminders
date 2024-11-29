@@ -1,4 +1,24 @@
-import { App, Editor, MarkdownView, Modal, Notice, Plugin, PluginSettingTab, Setting } from 'obsidian';
+import { 
+    App, 
+    Editor, 
+    MarkdownView, 
+    Plugin, 
+    PluginSettingTab, 
+    Setting, 
+    TFile,
+    Notice,
+    Modal
+} from 'obsidian';
+import { google, calendar_v3 } from 'googleapis';
+import { OAuth2Client } from 'google-auth-library';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
+
+interface GCalReminderSettings {
+    clientId: string;
+    clientSecret: string;
+    refreshToken: string;
+}
 
 // Remember to rename these classes and interfaces!
 
