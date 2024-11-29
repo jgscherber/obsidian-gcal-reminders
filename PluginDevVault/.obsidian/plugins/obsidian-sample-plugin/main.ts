@@ -20,139 +20,242 @@ interface GCalReminderSettings {
     refreshToken: string;
 }
 
-// Remember to rename these classes and interfaces!
+class DateTimePickerModal extends Modal {
+    result: Date | null = null;
+    onSubmit: (result: Date) => void;
+    picker: flatpickr.Instance;
 
-interface MyPluginSettings {
-	mySetting: string;
-}
+    constructor(app: App, onSubmit: (result: Date) => void) {
+        super(app);
+        this.onSubmit = onSubmit;
+    }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
-	mySetting: 'default'
-}
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
 
-export default class HelloWorldPlugin extends Plugin {
-	settings: MyPluginSettings;
+        contentEl.createEl('h2', { text: 'Set Reminder Date and Time' });
 
-	async onload() {
-		await this.loadSettings();
-
-        this.addRibbonIcon('dice', 'Greet', () => {
-            new Notice('Hello, World!');            
+        // Create input for flatpickr
+        const dateTimeInput = contentEl.createEl('input', {
+            type: 'text',
+            attr: { placeholder: 'Select date and time...' }
         });
 
-		// This creates an icon in the left ribbon.
-		const ribbonIconEl = this.addRibbonIcon('dice', 'Sample Plugin', (evt: MouseEvent) => {
-			// Called when the user clicks the icon.
-			new Notice('This is a notice!');
-		});
-		// Perform additional things with the ribbon
-		ribbonIconEl.addClass('my-plugin-ribbon-class');
+        // Initialize flatpickr
+        this.picker = flatpickr(dateTimeInput, {
+            enableTime: true,
+            dateFormat: "Y-m-d H:i",
+            defaultDate: new Date(),
+            defaultHour: new Date().getHours() + 1,
+            minuteIncrement: 5,
+            onChange: (selectedDates) => {
+                if (selectedDates[0]) {
+                    this.result = selectedDates[0];
+                }
+            }
+        });
 
-		// This adds a status bar item to the bottom of the app. Does not work on mobile apps.
-		const statusBarItemEl = this.addStatusBarItem();
-		statusBarItemEl.setText('Status Bar Text');
+        // Create submit button
+        const submitBtn = contentEl.createEl('button', { 
+            text: 'Create Reminder',
+            cls: 'mod-cta'
+        });
+        submitBtn.style.marginTop = '20px';
+        submitBtn.addEventListener('click', () => {
+            if (this.result) {
+                this.close();
+                this.onSubmit(this.result);
+            } else {
+                new Notice('Please select a date and time');
+            }
+        });
+    }
 
-		// This adds a simple command that can be triggered anywhere
-		this.addCommand({
-			id: 'open-sample-modal-simple',
-			name: 'Open sample modal (simple)',
-			callback: () => {
-				new SampleModal(this.app).open();
-			}
-		});
-		// This adds an editor command that can perform some operation on the current editor instance
-		this.addCommand({
-			id: 'sample-editor-command',
-			name: 'Sample editor command',
-			editorCallback: (editor: Editor, view: MarkdownView) => {
-				console.log(editor.getSelection());
-				editor.replaceSelection('Sample Editor Command');
-			}
-		});
-		// This adds a complex command that can check whether the current state of the app allows execution of the command
-		this.addCommand({
-			id: 'open-sample-modal-complex',
-			name: 'Open sample modal (complex)',
-			checkCallback: (checking: boolean) => {
-				// Conditions to check
-				const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
-				if (markdownView) {
-					// If checking is true, we're simply "checking" if the command can be run.
-					// If checking is false, then we want to actually perform the operation.
-					if (!checking) {
-						new SampleModal(this.app).open();
-					}
-
-					// This command will only show up in Command Palette when the check function returns true
-					return true;
-				}
-			}
-		});
-
-		// This adds a settings tab so the user can configure various aspects of the plugin
-		this.addSettingTab(new SampleSettingTab(this.app, this));
-
-		// If the plugin hooks up any global DOM events (on parts of the app that doesn't belong to this plugin)
-		// Using this function will automatically remove the event listener when this plugin is disabled.
-		this.registerDomEvent(document, 'click', (evt: MouseEvent) => {
-			console.log('click', evt);
-		});
-
-		// When registering intervals, this function will automatically clear the interval when the plugin is disabled.
-		this.registerInterval(window.setInterval(() => console.log('setInterval'), 5 * 60 * 1000));
-	}
-
-	onunload() {
-
-	}
-
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-	}
-
-	async saveSettings() {
-		await this.saveData(this.settings);
-	}
+    onClose() {
+        this.picker.destroy();
+        const { contentEl } = this;
+        contentEl.empty();
+    }
 }
 
-class SampleModal extends Modal {
-	constructor(app: App) {
-		super(app);
-	}
+export default class GCalReminderPlugin extends Plugin {
+    settings: GCalReminderSettings;
+    googleAuth: OAuth2Client;
 
-	onOpen() {
-		const {contentEl} = this;
-		contentEl.setText('Woah!');
-	}
+    async onload() {
+        await this.loadSettings();
+        this.setupGoogleAuth();
 
-	onClose() {
-		const {contentEl} = this;
-		contentEl.empty();
-	}
+        // Load Flatpickr CSS
+        this.loadFlatpickrStyles();
+
+        // Add command to create reminder
+        this.addCommand({
+            id: 'add-gcal-reminder',
+            name: 'Add Google Calendar Reminder',
+            checkCallback: (checking: boolean) => {
+                const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
+                if (markdownView) {
+                    if (!checking) {
+                        this.showDateTimePicker(markdownView);
+                    }
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        // Add settings tab
+        this.addSettingTab(new GCalReminderSettingTab(this.app, this));
+    }
+
+    loadFlatpickrStyles() {
+        const linkEl = document.createElement('link');
+        linkEl.rel = 'stylesheet';
+        linkEl.href = 'https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css';
+        document.head.appendChild(linkEl);
+    }
+
+    setupGoogleAuth() {
+        this.googleAuth = new google.auth.OAuth2(
+            this.settings.clientId,
+            this.settings.clientSecret
+        );
+        this.googleAuth.setCredentials({
+            refresh_token: this.settings.refreshToken
+        });
+    }
+
+    showDateTimePicker(markdownView: MarkdownView) {
+        new DateTimePickerModal(this.app, async (date) => {
+            if (date) {
+                await this.createReminderWithBlockLink(date, markdownView);
+            }
+        }).open();
+    }
+
+    async createReminderWithBlockLink(date: Date, markdownView: MarkdownView) {
+        const editor = markdownView.editor;
+        const file = markdownView.file;
+
+        if (!file) {
+            new Notice('No active file');
+            return;
+        }
+
+        try {
+            // Generate a unique block ID
+            const blockId = this.generateBlockId();
+            
+            // Get current cursor position and line content
+            const cursor = editor.getCursor();
+            const line = editor.getLine(cursor.line);
+            
+            // Create Google Calendar event
+            const calendar = google.calendar({ version: 'v3', auth: this.googleAuth });
+            
+            const event = await calendar.events.insert({
+                calendarId: 'primary',
+                requestBody: {
+                    summary: line.trim(),
+                    description: `Obsidian Link: ${this.createObsidianUrl(file, blockId)}`,
+                    start: {
+                        dateTime: date.toISOString(),
+                        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                    },
+                    end: {
+                        dateTime: new Date(date.getTime() + 30 * 60000).toISOString(),
+                        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                    }
+                }
+            });
+
+            // Format datetime in YYYY-MM-DD HH:mm format
+            const formattedDateTime = date.toISOString()
+                .replace(/T/, ' ')
+                .replace(/\..+/, '')
+                .slice(0, 16);
+
+            // Create event URL
+            const calendarUrl = `https://calendar.google.com/calendar/event?eid=${event.data.htmlLink?.split('eid=')[1]}`;
+            
+            // Update the line with the new format
+            const updatedLine = `${line} ^${blockId} #reminder (${formattedDateTime})[${calendarUrl}]`;
+            editor.setLine(cursor.line, updatedLine);
+
+            new Notice('Reminder created successfully!');
+        } catch (error) {
+            console.error('Failed to create reminder:', error);
+            new Notice('Failed to create reminder');
+        }
+    }
+
+    generateBlockId(): string {
+        return Math.random().toString(36).substring(2, 8);
+    }
+
+    createObsidianUrl(file: TFile, blockId: string): string {
+        const fileName = encodeURIComponent(file.path);
+        return `obsidian://open?vault=${encodeURIComponent(this.app.vault.getName())}&file=${fileName}&block=${blockId}`;
+    }
+
+    async loadSettings() {
+        this.settings = Object.assign({
+            clientId: '',
+            clientSecret: '',
+            refreshToken: ''
+        }, await this.loadData());
+    }
+
+    async saveSettings() {
+        await this.saveData(this.settings);
+    }
 }
 
-class SampleSettingTab extends PluginSettingTab {
-	plugin: HelloWorldPlugin;
+class GCalReminderSettingTab extends PluginSettingTab {
+    plugin: GCalReminderPlugin;
 
-	constructor(app: App, plugin: HelloWorldPlugin) {
-		super(app, plugin);
-		this.plugin = plugin;
-	}
+    constructor(app: App, plugin: GCalReminderPlugin) {
+        super(app, plugin);
+        this.plugin = plugin;
+    }
 
-	display(): void {
-		const {containerEl} = this;
+    display(): void {
+        const { containerEl } = this;
+        containerEl.empty();
 
-		containerEl.empty();
+        new Setting(containerEl)
+            .setName('Google Client ID')
+            .setDesc('Client ID from Google Cloud Console')
+            .addText(text => text
+                .setPlaceholder('Enter client ID')
+                .setValue(this.plugin.settings.clientId)
+                .onChange(async (value) => {
+                    this.plugin.settings.clientId = value;
+                    await this.plugin.saveSettings();
+                }));
 
-		new Setting(containerEl)
-			.setName('Setting #1')
-			.setDesc('It\'s a secret')
-			.addText(text => text
-				.setPlaceholder('Enter your secret')
-				.setValue(this.plugin.settings.mySetting)
-				.onChange(async (value) => {
-					this.plugin.settings.mySetting = value;
-					await this.plugin.saveSettings();
-				}));
-	}
+        new Setting(containerEl)
+            .setName('Google Client Secret')
+            .setDesc('Client Secret from Google Cloud Console')
+            .addText(text => text
+                .setPlaceholder('Enter client secret')
+                .setValue(this.plugin.settings.clientSecret)
+                .onChange(async (value) => {
+                    this.plugin.settings.clientSecret = value;
+                    await this.plugin.saveSettings();
+                }));
+
+        new Setting(containerEl)
+            .setName('Refresh Token')
+            .setDesc('Google OAuth2 refresh token')
+            .addText(text => text
+                .setPlaceholder('Enter refresh token')
+                .setValue(this.plugin.settings.refreshToken)
+                .onChange(async (value) => {
+                    this.plugin.settings.refreshToken = value;
+                    await this.plugin.saveSettings();
+                }));
+    }
 }
