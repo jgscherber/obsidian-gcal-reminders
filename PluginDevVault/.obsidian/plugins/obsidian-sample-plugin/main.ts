@@ -16,7 +16,87 @@ import { format } from 'date-fns';
 interface GCalReminderSettings {
     clientId: string;
     clientSecret: string;
-    refreshToken: string;
+    refreshToken: string | null;
+}
+
+class AuthCodeModal extends Modal {
+    plugin: GCalReminderPlugin;
+    oauth2Client: OAuth2Client;
+    authUrl: string;
+
+    constructor(app: App, plugin: GCalReminderPlugin, oauth2Client: OAuth2Client, authUrl: string) {
+        super(app);
+        this.plugin = plugin;
+        this.oauth2Client = oauth2Client;
+        this.authUrl = authUrl;
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+        contentEl.empty();
+
+        contentEl.createEl('h2', { text: 'Google Calendar Authentication' });
+        
+        // Instructions
+        const instructions = contentEl.createDiv({ cls: 'auth-instructions' });
+        instructions.createEl('p', { text: '1. Click the button below to open Google authentication in your browser' });
+        instructions.createEl('p', { text: '2. Complete the authentication process' });
+        instructions.createEl('p', { text: '3. Copy the code from the final page' });
+        instructions.createEl('p', { text: '4. Paste the code below and click Submit' });
+
+        // Open Auth URL button
+        const openAuthButton = contentEl.createEl('button', {
+            text: 'Open Authentication Page',
+            cls: 'mod-cta'
+        });
+        openAuthButton.addEventListener('click', () => {
+            window.open(this.authUrl);
+        });
+
+        // Create input for auth code
+        const inputContainer = contentEl.createDiv({ cls: 'auth-input-container' });
+        inputContainer.style.marginTop = '20px';
+        const authCodeInput = inputContainer.createEl('input', {
+            type: 'text',
+            placeholder: 'Paste authentication code here'
+        });
+
+        // Create submit button
+        const submitButton = contentEl.createEl('button', {
+            text: 'Submit',
+            cls: 'mod-cta'
+        });
+        submitButton.style.marginTop = '10px';
+        
+        submitButton.addEventListener('click', async () => {
+            const code = authCodeInput.value.trim();
+            if (!code) {
+                new Notice('Please enter the authentication code');
+                return;
+            }
+
+            try {
+                const { tokens } = await this.oauth2Client.getToken(code);
+                if (tokens.refresh_token) {
+                    this.plugin.settings.refreshToken = tokens.refresh_token;
+                    await this.plugin.saveSettings();
+                    this.plugin.setupGoogleAuth();
+                    new Notice('Successfully authenticated with Google Calendar!');
+                    this.close();
+                } else {
+                    new Notice('No refresh token received. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error getting tokens:', error);
+                new Notice('Failed to authenticate. Please try again.');
+            }
+        });
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
 }
 
 class DateTimePickerModal extends Modal {
@@ -87,7 +167,10 @@ export default class GCalReminderPlugin extends Plugin {
 
     async onload() {
         await this.loadSettings();
-        this.setupGoogleAuth();
+        
+        if (this.settings.clientId && this.settings.clientSecret && this.settings.refreshToken) {
+            this.setupGoogleAuth();
+        }
 
         // Add command to create reminder
         this.addCommand({
@@ -97,6 +180,10 @@ export default class GCalReminderPlugin extends Plugin {
                 const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
                 if (markdownView) {
                     if (!checking) {
+                        if (!this.settings.refreshToken) {
+                            new Notice('Please authenticate with Google Calendar in settings first');
+                            return;
+                        }
                         this.showDateTimePicker(markdownView);
                     }
                     return true;
@@ -112,11 +199,31 @@ export default class GCalReminderPlugin extends Plugin {
     setupGoogleAuth() {
         this.googleAuth = new google.auth.OAuth2(
             this.settings.clientId,
-            this.settings.clientSecret
+            this.settings.clientSecret,
+            'urn:ietf:wg:oauth:2.0:oob'  // For manual copy/paste flow
         );
-        this.googleAuth.setCredentials({
-            refresh_token: this.settings.refreshToken
+        
+        if (this.settings.refreshToken) {
+            this.googleAuth.setCredentials({
+                refresh_token: this.settings.refreshToken
+            });
+        }
+    }
+
+    initiateAuth() {
+        const oauth2Client = new google.auth.OAuth2(
+            this.settings.clientId,
+            this.settings.clientSecret,
+            'urn:ietf:wg:oauth:2.0:oob'  // For manual copy/paste flow
+        );
+
+        const authUrl = oauth2Client.generateAuthUrl({
+            access_type: 'offline',
+            scope: ['https://www.googleapis.com/auth/calendar'],
+            prompt: 'consent'
         });
+
+        new AuthCodeModal(this.app, this, oauth2Client, authUrl).open();
     }
 
     showDateTimePicker(markdownView: MarkdownView) {
@@ -193,7 +300,7 @@ export default class GCalReminderPlugin extends Plugin {
         this.settings = Object.assign({
             clientId: '',
             clientSecret: '',
-            refreshToken: ''
+            refreshToken: null
         }, await this.loadData());
     }
 
@@ -237,14 +344,16 @@ class GCalReminderSettingTab extends PluginSettingTab {
                 }));
 
         new Setting(containerEl)
-            .setName('Refresh Token')
-            .setDesc('Google OAuth2 refresh token')
-            .addText(text => text
-                .setPlaceholder('Enter refresh token')
-                .setValue(this.plugin.settings.refreshToken)
-                .onChange(async (value) => {
-                    this.plugin.settings.refreshToken = value;
-                    await this.plugin.saveSettings();
+            .setName('Authentication')
+            .setDesc('Connect to Google Calendar')
+            .addButton(button => button
+                .setButtonText(this.plugin.settings.refreshToken ? 'Re-authenticate' : 'Connect to Google Calendar')
+                .onClick(() => {
+                    if (this.plugin.settings.clientId && this.plugin.settings.clientSecret) {
+                        this.plugin.initiateAuth();
+                    } else {
+                        new Notice('Please enter Client ID and Client Secret first');
+                    }
                 }));
     }
 }
