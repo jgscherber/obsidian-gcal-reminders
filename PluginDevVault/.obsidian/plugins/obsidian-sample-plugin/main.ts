@@ -1,6 +1,5 @@
 import { 
     App, 
-    Editor, 
     MarkdownView, 
     Plugin, 
     PluginSettingTab, 
@@ -258,7 +257,7 @@ export default class GCalReminderPlugin extends Plugin {
                 calendarId: 'primary',
                 requestBody: {
                     summary: line.trim(),
-                    description: `Obsidian Link: ${this.createObsidianUrl(file, blockId)}`,
+                    description: this.createObsidianUrl(file, blockId),
                     start: {
                         dateTime: date.toISOString(),
                         timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -276,8 +275,8 @@ export default class GCalReminderPlugin extends Plugin {
             // Get the calendar URL
             const calendarUrl = event.data.htmlLink || '';
             
-            // Update the line with the new format: text ^blockId #reminder (datetime)[gcal_URL]
-            const updatedLine = `${line} ^${blockId} #reminder (${formattedDateTime})[${calendarUrl}]`;
+            // Update the line with the new format: text #reminder [datetime](gcal_URL) ^blockId
+            const updatedLine = `${line} #reminder [${formattedDateTime}](${calendarUrl}) ^${blockId}`;
             editor.setLine(cursor.line, updatedLine);
 
             new Notice('Reminder created successfully!');
@@ -292,8 +291,11 @@ export default class GCalReminderPlugin extends Plugin {
     }
 
     createObsidianUrl(file: TFile, blockId: string): string {
-        const fileName = encodeURIComponent(file.path);
-        return `obsidian://open?vault=${encodeURIComponent(this.app.vault.getName())}&file=${fileName}&block=${blockId}`;
+        // Get the file path and encode the entire path including any # symbols
+        const filePath = file.path.replace(/#/g, '%23');
+        
+        // Create the URL with the block reference
+        return `obsidian://open?vault=${encodeURIComponent(this.app.vault.getName())}&file=${filePath}%23%5E${blockId}`;
     }
 
     async loadSettings() {
