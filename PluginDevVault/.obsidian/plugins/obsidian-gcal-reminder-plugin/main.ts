@@ -220,8 +220,8 @@ export default class GCalReminderPlugin extends Plugin {
         const authUrl = this.googleAuth.generateAuthUrl({
             access_type: 'offline',
             // TODO: Event vs. Task
-            scope: ['https://www.googleapis.com/auth/calendar'],
-            //scope: ['https://www.googleapis.com/auth/tasks'],
+            //scope: ['https://www.googleapis.com/auth/calendar'],
+            scope: ['https://www.googleapis.com/auth/tasks'],
             prompt: 'consent'
         });
 
@@ -254,7 +254,8 @@ export default class GCalReminderPlugin extends Plugin {
             const line = editor.getLine(cursor.line);
             
             // Create Google Calendar event
-            const calendarUrl = await this.createCalendarEvent(date, file, line, blockId);
+            //const calendarUrl = await this.createCalendarEvent(date, file, line, blockId);
+            const calendarUrl = await this.CreateTask(date, file, line, blockId);
             
             // Update the line with the new format: text #reminder [datetime](gcal_URL) ^blockId
             const formattedDateTime = format(date, 'yyyy-MM-dd HH:mm');
@@ -268,6 +269,37 @@ export default class GCalReminderPlugin extends Plugin {
         }
     }
 
+    async CreateTask(
+        date: Date,
+        file: TFile,
+        line: string,
+        blockId: string) : Promise<string>
+        {
+            const taskListName = 'Obsidian';
+
+            new Notice("Creating task in Google Tasks");
+            const tasks = google.tasks({ version: 'v1', auth: this.googleAuth });
+
+            const tasklists = await tasks.tasklists.list();
+            const tasklist = tasklists?.data?.items?.find((list) => list.title === taskListName);
+            if (!tasklist) {
+                new Notice('No task list found with the name ' + taskListName);
+                return '';
+            }
+
+            const task = await tasks.tasks.insert({
+                tasklist: tasklist.id!,
+                requestBody: {
+                    title: line.trim() || 'Obsidian Reminder',
+                    notes: this.createObsidianUrl(file, blockId),
+                    due: date.toISOString()
+                }
+            });
+
+            // Get the task URL
+            return task.data.webViewLink || '';
+        }
+
     async createCalendarEvent(
         date: Date,
         file: TFile,
@@ -280,7 +312,7 @@ export default class GCalReminderPlugin extends Plugin {
         const event = await calendar.events.insert({
             calendarId: 'primary',
             requestBody: {
-                summary: line.trim() || 'Obsidian Reminder', // TODO: this || isn't coalescings
+                summary: line.trim() || 'Obsidian Reminder',
                 description: this.createObsidianUrl(file, blockId),
                 start: {
                     dateTime: date.toISOString(),

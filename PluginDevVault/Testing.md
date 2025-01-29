@@ -1,6 +1,8 @@
- #reminder [2025-01-29 06:00](https://www.google.com/calendar/event?eid=NmtvZDEwczNqMGxpcTQ2MHJrZzYza3E4dGMgamdzY2hlcmJlckBt) ^mvjpfr
+  #reminder [2025-01-29 06:00](https://www.google.com/calendar/event?eid=a3Awa2s1dWc4ODMwazFxcGZidGwxbmhoNWcgamdzY2hlcmJlckBt) ^genxn6
+ #reminder [2025-01-29 06:00](https://www.google.com/calendar/event?eid=MDZpbDVvMHFicDdxM3FrZ2k2OTRuNmllODAgamdzY2hlcmJlckBt) ^pav7wq
+  #reminder [2025-01-29 06:00](https://www.google.com/calendar/event?eid=ZDgzdWc2MTYxaTlpNTJzanA3Y25xYWVtbmsgamdzY2hlcmJlckBt) ^wbvzwz
+ #reminder [2025-01-29 06:00](https://tasks.google.com/task/kHXUZChAKpH_9Wro?sa=6) ^m6zmwf
 
- #reminder [2025-01-29 06:00](https://www.google.com/calendar/event?eid=NGU2OHU4Y2w1YmcyaWFqYzRqaDU2Zjhsa2sgamdzY2hlcmJlckBt) ^h33nzo
 
 IDK why this doesn't work
 ```dataview
