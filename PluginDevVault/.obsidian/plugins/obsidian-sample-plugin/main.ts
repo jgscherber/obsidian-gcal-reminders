@@ -220,8 +220,8 @@ export default class GCalReminderPlugin extends Plugin {
         const authUrl = this.googleAuth.generateAuthUrl({
             access_type: 'offline',
             // TODO: Event vs. Task
-            // scope: ['https://www.googleapis.com/auth/calendar'],
-            scope: ['https://www.googleapis.com/auth/tasks'],
+            scope: ['https://www.googleapis.com/auth/calendar'],
+            //scope: ['https://www.googleapis.com/auth/tasks'],
             prompt: 'consent'
         });
 
@@ -274,6 +274,7 @@ export default class GCalReminderPlugin extends Plugin {
         line: string,
         blockId: string) : Promise<string>
     {
+        new Notice("Creating event in Google Calendar");
         const calendar = google.calendar({ version: 'v3', auth: this.googleAuth });
             
         const event = await calendar.events.insert({
