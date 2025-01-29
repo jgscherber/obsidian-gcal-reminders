@@ -339,6 +339,7 @@ export default class GCalReminderPlugin extends Plugin {
         const filePath = file.path.replace(/#/g, '%23');
         
         // Create the URL with the block reference
+        // TODO: prefix with special redirect URL thing
         return `obsidian://open?vault=${encodeURIComponent(this.app.vault.getName())}&file=${filePath}%23%5E${blockId}`;
     }
 
