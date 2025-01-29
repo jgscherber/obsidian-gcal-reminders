@@ -167,7 +167,9 @@ export default class GCalReminderPlugin extends Plugin {
     async onload() {
         await this.loadSettings();
         
-        if (this.settings.clientId && this.settings.clientSecret && this.settings.refreshToken) {
+        if (this.settings.clientId
+            && this.settings.clientSecret
+            && this.settings.refreshToken) {
             this.setupGoogleAuth();
         }
 
@@ -202,6 +204,7 @@ export default class GCalReminderPlugin extends Plugin {
             'urn:ietf:wg:oauth:2.0:oob'  // For manual copy/paste flow
         );
         
+        // TODO: WHATS THIS REFRESH??  
         if (this.settings.refreshToken) {
             this.googleAuth.setCredentials({
                 refresh_token: this.settings.refreshToken
@@ -210,19 +213,19 @@ export default class GCalReminderPlugin extends Plugin {
     }
 
     initiateAuth() {
-        const oauth2Client = new google.auth.OAuth2(
-            this.settings.clientId,
-            this.settings.clientSecret,
-            'urn:ietf:wg:oauth:2.0:oob'  // For manual copy/paste flow
-        );
+        if (!this.googleAuth) {
+            this.setupGoogleAuth();
+        }
 
-        const authUrl = oauth2Client.generateAuthUrl({
+        const authUrl = this.googleAuth.generateAuthUrl({
             access_type: 'offline',
-            scope: ['https://www.googleapis.com/auth/calendar'],
+            // TODO: Event vs. Task
+            // scope: ['https://www.googleapis.com/auth/calendar'],
+            scope: ['https://www.googleapis.com/auth/tasks'],
             prompt: 'consent'
         });
 
-        new AuthCodeModal(this.app, this, oauth2Client, authUrl).open();
+        new AuthCodeModal(this.app, this, this.googleAuth, authUrl).open();
     }
 
     showDateTimePicker(markdownView: MarkdownView) {
@@ -251,31 +254,10 @@ export default class GCalReminderPlugin extends Plugin {
             const line = editor.getLine(cursor.line);
             
             // Create Google Calendar event
-            const calendar = google.calendar({ version: 'v3', auth: this.googleAuth });
-            
-            const event = await calendar.events.insert({
-                calendarId: 'primary',
-                requestBody: {
-                    summary: line.trim(),
-                    description: this.createObsidianUrl(file, blockId),
-                    start: {
-                        dateTime: date.toISOString(),
-                        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-                    },
-                    end: {
-                        dateTime: new Date(date.getTime() + 30 * 60000).toISOString(),
-                        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-                    }
-                }
-            });
-
-            // Format the datetime string
-            const formattedDateTime = format(date, 'yyyy-MM-dd HH:mm');
-
-            // Get the calendar URL
-            const calendarUrl = event.data.htmlLink || '';
+            const calendarUrl = await this.createCalendarEvent(date, file, line, blockId);
             
             // Update the line with the new format: text #reminder [datetime](gcal_URL) ^blockId
+            const formattedDateTime = format(date, 'yyyy-MM-dd HH:mm');
             const updatedLine = `${line} #reminder [${formattedDateTime}](${calendarUrl}) ^${blockId}`;
             editor.setLine(cursor.line, updatedLine);
 
@@ -284,6 +266,35 @@ export default class GCalReminderPlugin extends Plugin {
             console.error('Failed to create reminder:', error);
             new Notice('Failed to create reminder');
         }
+    }
+
+    async createCalendarEvent(
+        date: Date,
+        file: TFile,
+        line: string,
+        blockId: string) : Promise<string>
+    {
+        const calendar = google.calendar({ version: 'v3', auth: this.googleAuth });
+            
+        const event = await calendar.events.insert({
+            calendarId: 'primary',
+            requestBody: {
+                summary: line.trim() || 'Obsidian Reminder', // TODO: this || isn't coalescings
+                description: this.createObsidianUrl(file, blockId),
+                start: {
+                    dateTime: date.toISOString(),
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                },
+                end: {
+                    dateTime: new Date(date.getTime() + 30 * 60000).toISOString(),
+                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
+                }
+            }
+        });
+
+
+        // Get the calendar URL
+        return event.data.htmlLink || '';
     }
 
     generateBlockId(): string {
