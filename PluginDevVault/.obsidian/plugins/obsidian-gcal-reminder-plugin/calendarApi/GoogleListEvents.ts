@@ -7,9 +7,9 @@ import type {
 } from "../helper/types";
 
 import GoogleCalendarPlugin from "src/GoogleCalendarPlugin";
-import { createNotice } from "src/helper/NoticeHelper";
+import { createNotice } from "../helper/NoticeHelper";
 import { googleListCalendars } from "./GoogleListCalendars";
-import { callRequest } from "src/helper/RequestWrapper";
+import { callRequest } from "../helper/RequestWrapper";
 import _ from "lodash"
 import { settingsAreCompleteAndLoggedIn } from "../view/GoogleCalendarSettingTab";
 import { allColorNames, getColorNameFromEvent } from "./GoogleColors";

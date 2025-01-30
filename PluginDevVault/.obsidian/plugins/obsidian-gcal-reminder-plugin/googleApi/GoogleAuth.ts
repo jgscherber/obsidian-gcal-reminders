@@ -23,7 +23,7 @@ import {
 	setRefreshToken,
 } from "../helper/LocalStorage";
 import { Notice, Platform, requestUrl } from "obsidian";
-import { createNotice } from 'src/helper/NoticeHelper';
+import { createNotice } from '../helper/NoticeHelper';
 import { log } from '../helper/log';
 
 

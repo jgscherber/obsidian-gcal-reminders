@@ -1,7 +1,7 @@
 import type { GoogleEvent } from "../helper/types";
 import { settingsAreCompleteAndLoggedIn } from "../view/GoogleCalendarSettingTab";
 import { createNotice } from "../helper/NoticeHelper";
-import { callRequest } from "src/helper/RequestWrapper";
+import { callRequest } from "../helper/RequestWrapper";
 import { GoogleApiError } from "../googleApi/GoogleApiError";
 import GoogleCalendarPlugin from "../GoogleCalendarPlugin";
 import { googleListCalendars } from "./GoogleListCalendars";

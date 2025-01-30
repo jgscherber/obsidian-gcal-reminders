@@ -4,7 +4,7 @@ import { createNotice } from "../helper/NoticeHelper";
 import type { GoogleEvent } from "../helper/types";
 
 import { settingsAreCompleteAndLoggedIn } from "../view/GoogleCalendarSettingTab";
-import { callRequest } from "src/helper/RequestWrapper";
+import { callRequest } from "../helper/RequestWrapper";
 import { logError } from "../helper/log";
 /**
  * This function will remove the event from the google api
