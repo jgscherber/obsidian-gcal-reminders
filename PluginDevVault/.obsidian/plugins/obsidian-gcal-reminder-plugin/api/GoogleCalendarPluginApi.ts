@@ -1,11 +1,11 @@
 
 import type { ListOptions, IGoogleCalendarPluginApi, GoogleEvent } from '../helper/types';
-import { googleListEvents } from "../googleApi/GoogleListEvents";
-import { googleGetEvent } from "../googleApi/GoogleGetEvent";
-import { googleListCalendars } from '../googleApi/GoogleListCalendars';
-import { googleCreateEvent } from '../googleApi/GoogleCreateEvent';
-import { googleDeleteEvent } from '../googleApi/GoogleDeleteEvent';
-import { googleUpdateEvent } from '../googleApi/GoogleUpdateEvent';
+import { googleListEvents } from "../calendarApi/GoogleListEvents";
+import { googleGetEvent } from "../calendarApi/GoogleGetEvent";
+import { googleListCalendars } from '../calendarApi/GoogleListCalendars';
+import { googleCreateEvent } from '../calendarApi/GoogleCreateEvent';
+import { googleDeleteEvent } from '../calendarApi/GoogleDeleteEvent';
+import { googleUpdateEvent } from '../calendarApi/GoogleUpdateEvent';
 import { createNoteFromEvent } from "../helper/AutoEventNoteCreator";
 
 export class GoogleCalendarPluginApi {

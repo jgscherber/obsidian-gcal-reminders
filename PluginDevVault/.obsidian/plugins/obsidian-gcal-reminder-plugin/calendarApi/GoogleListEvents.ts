@@ -12,8 +12,8 @@ import { googleListCalendars } from "./GoogleListCalendars";
 import { callRequest } from "src/helper/RequestWrapper";
 import _ from "lodash"
 import { settingsAreCompleteAndLoggedIn } from "../view/GoogleCalendarSettingTab";
-import { allColorNames, getColorNameFromEvent } from "../googleApi/GoogleColors";
-import { GoogleApiError } from "./GoogleApiError";
+import { allColorNames, getColorNameFromEvent } from "./GoogleColors";
+import { GoogleApiError } from "../googleApi/GoogleApiError";
 import { logError } from "../helper/log";
 
 const cachedEvents = new Map<string, EventCacheValue>();

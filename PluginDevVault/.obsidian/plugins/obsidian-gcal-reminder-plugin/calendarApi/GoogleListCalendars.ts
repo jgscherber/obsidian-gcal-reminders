@@ -4,7 +4,7 @@ import GoogleCalendarPlugin from "src/GoogleCalendarPlugin";
 import { createNotice } from "src/helper/NoticeHelper";
 import { callRequest } from "src/helper/RequestWrapper";
 import { settingsAreCompleteAndLoggedIn } from "../view/GoogleCalendarSettingTab";
-import { GoogleApiError } from "./GoogleApiError";
+import { GoogleApiError } from "../googleApi/GoogleApiError";
 import { logError } from "../helper/log";
 
 let cachedCalendars: GoogleCalendar[] = []

@@ -4,7 +4,7 @@ import { createNotice } from "../helper/NoticeHelper";
 import { callRequest } from "src/helper/RequestWrapper";
 import { settingsAreCompleteAndLoggedIn } from "../view/GoogleCalendarSettingTab";
 import GoogleCalendarPlugin from "../GoogleCalendarPlugin";
-import { GoogleApiError } from "./GoogleApiError";
+import { GoogleApiError } from "../googleApi/GoogleApiError";
 import { logError } from "../helper/log";
 
 

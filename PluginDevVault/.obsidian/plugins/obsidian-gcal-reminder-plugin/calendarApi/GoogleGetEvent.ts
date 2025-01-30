@@ -3,7 +3,7 @@ import { callRequest } from "src/helper/RequestWrapper";
 import { settingsAreCompleteAndLoggedIn } from "../view/GoogleCalendarSettingTab";
 import { createNotice } from "../helper/NoticeHelper";
 import { googleListCalendars } from "./GoogleListCalendars";
-import { GoogleApiError } from "./GoogleApiError";
+import { GoogleApiError } from "../googleApi/GoogleApiError";
 import { logError } from "../helper/log";
 /**
  * Function to get information of a single event by id

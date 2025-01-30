@@ -1,4 +1,4 @@
-import { GoogleApiError } from "./GoogleApiError";
+import { GoogleApiError } from "../googleApi/GoogleApiError";
 import GoogleCalendarPlugin from "../GoogleCalendarPlugin";
 import { createNotice } from "../helper/NoticeHelper";
 import type { GoogleEvent } from "../helper/types";
