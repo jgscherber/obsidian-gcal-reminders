@@ -256,62 +256,63 @@ export async function LoginGoogle(
 	+ `&scope=https://www.googleapis.com/auth/calendar.readonly%20https://www.googleapis.com/auth/calendar.events`;
 	
 
+    // TODO I don't think any of this auth session stuff is needed because it's only used for the redirect
 	// Make sure no server is running before starting a new one
-	if(_authSession.server) {
-		window.open(authUrl);
-		return
-	}
+	// if(_authSession.server) {
+	// 	window.open(authUrl);
+	// 	return
+	// }
 
-	const http = require("http");
-	const url = require("url");
+	// const http = require("http");
+	// const url = require("url");
 
-	_authSession.server = http
-		.createServer(async (req: IncomingMessage, res: ServerResponse) => {
-		try {
-			// Make sure the callback url is used
-			if (req.url.indexOf("/callback") < 0)return; 
+	// _authSession.server = http
+	// 	.createServer(async (req: IncomingMessage, res: ServerResponse) => {
+	// 	try {
+	// 		// Make sure the callback url is used
+	// 		if (req.url.indexOf("/callback") < 0)return; 
 			
-			// acquire the code from the querystring, and close the web server.
-			const qs = new url.URL(
-				req.url,
-				`http://127.0.0.1:${PORT}`
-			).searchParams;
-			const code = qs.get("code");
-			const received_state = qs.get("state");
+	// 		// acquire the code from the querystring, and close the web server.
+	// 		const qs = new url.URL(
+	// 			req.url,
+	// 			`http://127.0.0.1:${PORT}`
+	// 		).searchParams;
+	// 		const code = qs.get("code");
+	// 		const received_state = qs.get("state");
 
-			if (received_state !== _authSession.state) {
-				return;
-			}
-			let token = await exchangeCodeForTokenCustom(plugin, _authSession.state, _authSession.verifier, code, false);
+	// 		if (received_state !== _authSession.state) {
+	// 			return;
+	// 		}
+	// 		let token = await exchangeCodeForTokenCustom(plugin, _authSession.state, _authSession.verifier, code, false);
 
-			if(token?.refresh_token) {
-				setRefreshToken(token.refresh_token);
-				setAccessToken(token.access_token);
-				setExpirationTime(+new Date() + token.expires_in * 1000);
-			}
-			log("Tokens acquired.");
+	// 		if(token?.refresh_token) {
+	// 			setRefreshToken(token.refresh_token);
+	// 			setAccessToken(token.access_token);
+	// 			setExpirationTime(+new Date() + token.expires_in * 1000);
+	// 		}
+	// 		log("Tokens acquired.");
 
-			res.end(
-				"Authentication successful! Please return to obsidian."
-			);
+	// 		res.end(
+	// 			"Authentication successful! Please return to obsidian."
+	// 		);
 
-			_authSession.server.close(()=>{
-				log("Server closed")
-			});
+	// 		_authSession.server.close(()=>{
+	// 			log("Server closed")
+	// 		});
 
-			plugin.settingsTab.display();
+	// 		plugin.settingsTab.display();
 			
-		} catch (e) {
-			log("Auth failed")
+	// 	} catch (e) {
+	// 		log("Auth failed")
 
-			_authSession.server.close(()=>{
-				log("Server closed")
-			});
-		}
-		_authSession = {server: null, verifier: null, challenge: null, state:null};
-	})
-	.listen(PORT, async () => {
-		// open the browser to the authorize url to start the workflow
-		window.open(authUrl);
-	});
+	// 		_authSession.server.close(()=>{
+	// 			log("Server closed")
+	// 		});
+	// 	}
+	// 	_authSession = {server: null, verifier: null, challenge: null, state:null};
+	// })
+	// .listen(PORT, async () => {
+	// 	// open the browser to the authorize url to start the workflow
+	// 	window.open(authUrl);
+	// });
 }
