@@ -25,12 +25,14 @@ import {
 import { Notice, Platform, requestUrl } from "obsidian";
 import { createNotice } from '../helper/NoticeHelper';
 import { log } from '../helper/log';
+import { IGoogleCalendarPluginSettings } from 'helper/types';
 
 
-const PORT = 42813;
-const REDIRECT_URL = `http://127.0.0.1:${PORT}/callback`;
-const REDIRECT_URL_MOBILE = `https://google-auth-obsidian-redirect.vercel.app/callback`;
-const PUBLIC_CLIENT_ID = `783376961232-v90b17gr1mj1s2mnmdauvkp77u6htpke.apps.googleusercontent.com`
+// Not using redirect
+// const PORT = 42813;
+// const REDIRECT_URL = `http://127.0.0.1:${PORT}/callback`;
+// const REDIRECT_URL_MOBILE = `https://google-auth-obsidian-redirect.vercel.app/callback`;
+// const PUBLIC_CLIENT_ID = `783376961232-v90b17gr1mj1s2mnmdauvkp77u6htpke.apps.googleusercontent.com`
 
 let lastRefreshTryMoment = window.moment().subtract(100, "seconds");
 let authSession = {server: null, verifier: null, challenge: null, state:null};
@@ -56,8 +58,9 @@ async function generateChallenge(verifier: string): Promise<string> {
 }
 
 
-export function getAccessIfValid(): string {
-	//Check if the token exists
+export function getAccessIfValid(): string | undefined {
+	// TODO calling this thrice in this method????
+    //Check if the token exists
 	if (!getAccessToken() || getAccessToken() == "") return;
 
 	//Check if Expiration time is not set or default 0
@@ -73,8 +76,7 @@ export function getAccessIfValid(): string {
 }
 
 
-const refreshAccessToken = async (plugin: GoogleCalendarPlugin): Promise<string> => {
-	const useCustomClient = plugin.settings.useCustomClient;
+const refreshAccessToken = async (settings: IGoogleCalendarPluginSettings): Promise<string | undefined> => {
 
 	// if(lastRefreshTryMoment.diff(window.moment(), "seconds") < 60){
 	// 	return;
@@ -82,14 +84,14 @@ const refreshAccessToken = async (plugin: GoogleCalendarPlugin): Promise<string>
 
 	let refreshBody = {
 		grant_type: "refresh_token",
-		client_id: useCustomClient ? plugin.settings.googleClientId?.trim() : PUBLIC_CLIENT_ID,
-		client_secret: useCustomClient ? plugin.settings.googleClientSecret?.trim() : null,
+		client_id: settings.googleClientId?.trim(),
+		client_secret: settings.googleClientSecret?.trim(),
 		refresh_token: getRefreshToken(),
 	};
 
 	const {json: tokenData} = await requestUrl({
 		method: 'POST',
-		url: useCustomClient ? `https://oauth2.googleapis.com/token` : `${plugin.settings.googleOAuthServer}/api/google/refresh`,
+		url: 'https://oauth2.googleapis.com/token',
 		headers: {'content-type': 'application/json'},
 		body: JSON.stringify(refreshBody)
 	})

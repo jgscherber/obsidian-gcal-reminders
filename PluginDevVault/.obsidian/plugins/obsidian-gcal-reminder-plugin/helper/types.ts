@@ -6,7 +6,7 @@
 import type { SplitDirection, TFile } from "obsidian";
 
 
-export interface GoogleCalendarPluginSettings {
+export interface IGoogleCalendarPluginSettings {
     // Authentication settings
 	useCustomClient: boolean;
     googleOAuthServer: string;
