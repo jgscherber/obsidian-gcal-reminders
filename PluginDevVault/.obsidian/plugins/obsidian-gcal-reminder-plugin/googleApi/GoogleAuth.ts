@@ -34,8 +34,8 @@ import { IGoogleCalendarPluginSettings } from 'types/types';
 // const REDIRECT_URL_MOBILE = `https://google-auth-obsidian-redirect.vercel.app/callback`;
 // const PUBLIC_CLIENT_ID = `783376961232-v90b17gr1mj1s2mnmdauvkp77u6htpke.apps.googleusercontent.com`
 
-let lastRefreshTryMoment = window.moment().subtract(100, "seconds");
-let authSession = {server: null, verifier: null, challenge: null, state:null};
+let _lastRefreshTryMoment = window.moment().subtract(100, "seconds");
+let _authSession = {server: '', verifier: '', challenge: '', state:''};
 
 
 function generateState(): string {
@@ -107,24 +107,14 @@ const refreshAccessToken = async (settings: IGoogleCalendarPluginSettings): Prom
 	return tokenData.access_token;
 }
 
-const exchangeCodeForTokenDefault = async (plugin: GoogleCalendarPlugin, state:string, verifier:string, code: string): Promise<boolean> => {
-
-	const request = await requestUrl({
-		method: 'POST',
-		url: `${plugin.settings.googleOAuthServer}/api/google/token`,
-		headers: {'content-type': 'application/json'},
-		body: JSON.stringify({
-			"client_id": PUBLIC_CLIENT_ID,
-			"code_verifier": verifier,
-			"code": code,
-			"state": state,
-		})
-	})
-
-	return request.json;
-}
-
-const exchangeCodeForTokenCustom = async (plugin: GoogleCalendarPlugin, state: string, verifier:string, code: string, isMobile: boolean): Promise<any> => {
+// TODO prettier config of braces on own line....
+const exchangeCodeForTokenCustom = async (
+    plugin: GoogleCalendarPlugin,
+    state: string,
+    verifier:string,
+    code: string,
+    isMobile: boolean): Promise<any> =>
+{
 	const url = `https://oauth2.googleapis.com/token`
 	+ `?grant_type=authorization_code`
 	+ `&client_id=${plugin.settings.googleClientId?.trim()}`
@@ -174,10 +164,10 @@ export async function StartLoginGoogleMobile(): Promise<void> {
 
 	const CLIENT_ID = useCustomClient ? plugin.settings.googleClientId : PUBLIC_CLIENT_ID;
 	
-	if(!authSession.state){
-		authSession.state = generateState();
-		authSession.verifier = await generateVerifier();
-		authSession.challenge = await generateChallenge(authSession.verifier);
+	if(!_authSession.state){
+		_authSession.state = generateState();
+		_authSession.verifier = await generateVerifier();
+		_authSession.challenge = await generateChallenge(_authSession.verifier);
 	}
 
 	const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
@@ -186,8 +176,8 @@ export async function StartLoginGoogleMobile(): Promise<void> {
 	+ `&redirect_uri=${REDIRECT_URL_MOBILE}`
 	+ `&prompt=consent`
 	+ `&access_type=offline`
-	+ `&state=${authSession.state}`
-	+ `&code_challenge=${authSession.challenge}`
+	+ `&state=${_authSession.state}`
+	+ `&code_challenge=${_authSession.challenge}`
 	+ `&code_challenge_method=S256`
 	+ `&scope=https://www.googleapis.com/auth/calendar.readonly%20https://www.googleapis.com/auth/calendar.events`;
 
@@ -197,11 +187,11 @@ export async function StartLoginGoogleMobile(): Promise<void> {
 export async function FinishLoginGoogleMobile(code:string, state:string): Promise<void> {
 	const plugin = GoogleCalendarPlugin.getInstance();
 
-	if (state !== authSession.state) {
+	if (state !== _authSession.state) {
 		return;
 	}
 
-	const token = await exchangeCodeForTokenCustom(GoogleCalendarPlugin.getInstance(), state, authSession.verifier, code, true);
+	const token = await exchangeCodeForTokenCustom(GoogleCalendarPlugin.getInstance(), state, _authSession.verifier, code, true);
 
 	if(token?.refresh_token) {
 		setRefreshToken(token.refresh_token);
@@ -211,7 +201,7 @@ export async function FinishLoginGoogleMobile(code:string, state:string): Promis
 		new Notice("Login successful!");
 		plugin.settingsTab.display();
 	}
-	authSession = {server: null, verifier: null, challenge: null, state:null};
+	_authSession = {server: null, verifier: null, challenge: null, state:null};
 }
 
 /**
@@ -224,40 +214,41 @@ export async function FinishLoginGoogleMobile(code:string, state:string): Promis
  * Local server will shut down
  * 
  */
-export async function LoginGoogle(): Promise<void> {
-	const plugin = GoogleCalendarPlugin.getInstance();
-	const useCustomClient = plugin.settings.useCustomClient;
+export async function LoginGoogle(
+    settings: IGoogleCalendarPluginSettings): Promise<void> {
 
-	const CLIENT_ID = useCustomClient ? plugin.settings.googleClientId : PUBLIC_CLIENT_ID;
+	const CLIENT_ID = settings.googleClientId;
 
 	if (!Platform.isDesktop) {
+        // Redirect wouldn't work on mobile?
 		new Notice("Can't use this OAuth method on this device");
 		return;
 	}
 
-	if (!settingsAreComplete()) return;
+    // TODO this check
+	// if (!settingsAreComplete()) return
 
-	if(!authSession.state){
-		authSession.state = generateState();
-		authSession.verifier = await generateVerifier();
-		authSession.challenge = await generateChallenge(authSession.verifier);
+	if(!_authSession.state){
+		_authSession.state = generateState();
+		_authSession.verifier = await generateVerifier();
+		_authSession.challenge = await generateChallenge(_authSession.verifier);
 	}
 
-
+    // TODO this needs to be different ... we're not redirecting, we want a code
 	const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
 	+ `?client_id=${CLIENT_ID}`
 	+ `&response_type=code`
 	+ `&redirect_uri=${REDIRECT_URL}`
 	+ `&prompt=consent`
 	+ `&access_type=offline`
-	+ `&state=${authSession.state}`
-	+ `&code_challenge=${authSession.challenge}`
+	+ `&state=${_authSession.state}`
+	+ `&code_challenge=${_authSession.challenge}`
 	+ `&code_challenge_method=S256`
 	+ `&scope=https://www.googleapis.com/auth/calendar.readonly%20https://www.googleapis.com/auth/calendar.events`;
 	
 
 	// Make sure no server is running before starting a new one
-	if(authSession.server) {
+	if(_authSession.server) {
 		window.open(authUrl);
 		return
 	}
@@ -265,7 +256,7 @@ export async function LoginGoogle(): Promise<void> {
 	const http = require("http");
 	const url = require("url");
 
-	authSession.server = http
+	_authSession.server = http
 		.createServer(async (req: IncomingMessage, res: ServerResponse) => {
 		try {
 			// Make sure the callback url is used
@@ -279,15 +270,10 @@ export async function LoginGoogle(): Promise<void> {
 			const code = qs.get("code");
 			const received_state = qs.get("state");
 
-			if (received_state !== authSession.state) {
+			if (received_state !== _authSession.state) {
 				return;
 			}
-			let token;
-			if(useCustomClient){
-				token = await exchangeCodeForTokenCustom(plugin, authSession.state, authSession.verifier, code, false);
-			}else{
-				token = await exchangeCodeForTokenDefault(plugin, authSession.state, authSession.verifier, code);
-			}
+			let token = await exchangeCodeForTokenCustom(plugin, _authSession.state, _authSession.verifier, code, false);
 
 			if(token?.refresh_token) {
 				setRefreshToken(token.refresh_token);
@@ -300,7 +286,7 @@ export async function LoginGoogle(): Promise<void> {
 				"Authentication successful! Please return to obsidian."
 			);
 
-			authSession.server.close(()=>{
+			_authSession.server.close(()=>{
 				log("Server closed")
 			});
 
@@ -309,11 +295,11 @@ export async function LoginGoogle(): Promise<void> {
 		} catch (e) {
 			log("Auth failed")
 
-			authSession.server.close(()=>{
+			_authSession.server.close(()=>{
 				log("Server closed")
 			});
 		}
-		authSession = {server: null, verifier: null, challenge: null, state:null};
+		_authSession = {server: null, verifier: null, challenge: null, state:null};
 	})
 	.listen(PORT, async () => {
 		// open the browser to the authorize url to start the workflow
