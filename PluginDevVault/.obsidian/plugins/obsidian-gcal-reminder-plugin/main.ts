@@ -11,6 +11,8 @@ import {
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
 import { format } from 'date-fns';
+import { AuthCodeModal } from 'views/AuthCodeModal'
+import { IGoogleCalendarPluginSettings } from 'types/IGoogleCalendarPluginSettings';
 
 
 interface GCalReminderSettings {
@@ -84,15 +86,15 @@ class DateTimePickerModal extends Modal {
 }
 
 export default class GCalReminderPlugin extends Plugin {
-    settings: GCalReminderSettings;
+    settings: IGoogleCalendarPluginSettings;
     googleAuth: OAuth2Client;
 
     async onload() {
         await this.loadSettings();
         
-        if (this.settings.clientId
-            && this.settings.clientSecret
-            && this.settings.refreshToken) {
+        if (this.settings.googleClientId
+            && this.settings.googleClientSecret
+            && this.settings.googleRefreshToken) {
             this.setupGoogleAuth();
         }
 
@@ -104,7 +106,7 @@ export default class GCalReminderPlugin extends Plugin {
                 const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
                 if (markdownView) {
                     if (!checking) {
-                        if (!this.settings.refreshToken) {
+                        if (!this.settings.googleRefreshToken) {
                             new Notice('Please authenticate with Google Calendar in settings first');
                             return;
                         }
@@ -122,15 +124,15 @@ export default class GCalReminderPlugin extends Plugin {
 
     setupGoogleAuth() {
         this.googleAuth = new google.auth.OAuth2(
-            this.settings.clientId,
-            this.settings.clientSecret,
+            this.settings.googleClientId,
+            this.settings.googleClientSecret,
             'urn:ietf:wg:oauth:2.0:oob'  // For manual copy/paste flow
         );
         
         // TODO: WHATS THIS REFRESH??  
-        if (this.settings.refreshToken) {
+        if (this.settings.googleRefreshToken) {
             this.googleAuth.setCredentials({
-                refresh_token: this.settings.refreshToken
+                refresh_token: this.settings.googleRefreshToken
             });
         }
     }
@@ -148,7 +150,15 @@ export default class GCalReminderPlugin extends Plugin {
             prompt: 'consent'
         });
 
-        new AuthCodeModal(this.app, this, this.googleAuth, authUrl).open();
+        async function successCallback() : Promise<any> {
+            await this.googleAuth.saveSettings();
+            this.googleAuth.setupGoogleAuth();
+        }
+        new AuthCodeModal(
+            this.app, 
+            authUrl,
+            this.settings,
+            successCallback).open();
     }
 
     showDateTimePicker(markdownView: MarkdownView) {
@@ -296,9 +306,9 @@ class GCalReminderSettingTab extends PluginSettingTab {
             .setDesc('Client ID from Google Cloud Console')
             .addText(text => text
                 .setPlaceholder('Enter client ID')
-                .setValue(this.plugin.settings.clientId)
+                .setValue(this.plugin.settings.googleClientId)
                 .onChange(async (value) => {
-                    this.plugin.settings.clientId = value;
+                    this.plugin.settings.googleClientId = value;
                     await this.plugin.saveSettings();
                 }));
 
@@ -307,9 +317,9 @@ class GCalReminderSettingTab extends PluginSettingTab {
             .setDesc('Client Secret from Google Cloud Console')
             .addText(text => text
                 .setPlaceholder('Enter client secret')
-                .setValue(this.plugin.settings.clientSecret)
+                .setValue(this.plugin.settings.googleClientSecret)
                 .onChange(async (value) => {
-                    this.plugin.settings.clientSecret = value;
+                    this.plugin.settings.googleClientSecret = value;
                     await this.plugin.saveSettings();
                 }));
 
@@ -317,9 +327,9 @@ class GCalReminderSettingTab extends PluginSettingTab {
             .setName('Authentication')
             .setDesc('Connect to Google Calendar')
             .addButton(button => button
-                .setButtonText(this.plugin.settings.refreshToken ? 'Re-authenticate' : 'Connect to Google Calendar')
+                .setButtonText(this.plugin.settings.googleRefreshToken ? 'Re-authenticate' : 'Connect to Google Calendar')
                 .onClick(() => {
-                    if (this.plugin.settings.clientId && this.plugin.settings.clientSecret) {
+                    if (this.plugin.settings.googleClientId && this.plugin.settings.googleClientSecret) {
                         this.plugin.initiateAuth();
                     } else {
                         new Notice('Please enter Client ID and Client Secret first');

@@ -1,32 +1,27 @@
 import { 
     App, 
-    MarkdownView, 
-    Plugin, 
-    PluginSettingTab, 
-    Setting, 
-    TFile,
     Notice,
     Modal
 } from 'obsidian';
 import { LoginGoogle } from 'googleApi/GoogleAuth';
 import { IGoogleCalendarPluginSettings } from 'types/IGoogleCalendarPluginSettings';
 
-class AuthCodeModal extends Modal {
+export class AuthCodeModal extends Modal {
     // TODO setting so class variables are prefixed with _
     _authUrl: string;
     _pluginSettings: IGoogleCalendarPluginSettings;
-    private _successCallback: () => any;
+    private _successCallbackAsync: () => any;
 
     constructor(
         app: App,
         authUrl: string,
         pluginSettings: IGoogleCalendarPluginSettings,
-        successCallback: () => any)
+        successCallback: () => Promise<any>)
     {
         super(app);
         this._authUrl = authUrl;
         this._pluginSettings = pluginSettings;
-        this._successCallback = successCallback;
+        this._successCallbackAsync = successCallback;
     }
 
     onOpen() {
@@ -78,8 +73,8 @@ class AuthCodeModal extends Modal {
             try {
                 const { tokens } = await this._oauth2Client.getToken(code);
                 if (tokens.refresh_token) {
-                    this._pluginSettings.refreshToken = tokens.refresh_token;
-                    this._successCallback();
+                    this._pluginSettings.googleRefreshToken = tokens.refresh_token;
+                    await this._successCallbackAsync();
                     // TODO move these into callback
                     // await this._plugin.saveSettings();
                     // this._plugin.setupGoogleAuth();
