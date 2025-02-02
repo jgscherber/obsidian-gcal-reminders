@@ -1,4 +1,4 @@
-import type { GoogleEvent } from "../helper/types";
+import type { GoogleEvent } from "../types/types";
 
 import { createNotice } from "../helper/NoticeHelper";
 import { callRequest } from "../helper/RequestWrapper";

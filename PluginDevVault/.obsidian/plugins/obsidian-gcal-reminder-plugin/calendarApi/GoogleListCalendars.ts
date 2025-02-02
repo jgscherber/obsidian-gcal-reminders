@@ -1,4 +1,4 @@
-import type { GoogleCalendar, GoogleCalendarList } from "./../helper/types";
+import type { GoogleCalendar, GoogleCalendarList } from "../types/types";
 
 import GoogleCalendarPlugin from "src/GoogleCalendarPlugin";
 import { createNotice } from "../helper/NoticeHelper";

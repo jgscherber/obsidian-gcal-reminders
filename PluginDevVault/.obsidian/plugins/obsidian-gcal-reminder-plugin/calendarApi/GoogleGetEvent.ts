@@ -1,4 +1,4 @@
-import type { GoogleEvent } from "../helper/types";
+import type { GoogleEvent } from "../types/types";
 import { callRequest } from "../helper/RequestWrapper";
 import { settingsAreCompleteAndLoggedIn } from "../view/GoogleCalendarSettingTab";
 import { createNotice } from "../helper/NoticeHelper";

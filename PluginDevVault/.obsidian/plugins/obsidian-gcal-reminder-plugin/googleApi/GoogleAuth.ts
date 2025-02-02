@@ -25,7 +25,7 @@ import {
 import { Notice, Platform, requestUrl } from "obsidian";
 import { createNotice } from '../helper/NoticeHelper';
 import { log } from '../helper/log';
-import { IGoogleCalendarPluginSettings } from 'helper/types';
+import { IGoogleCalendarPluginSettings } from 'types/types';
 
 
 // Not using redirect

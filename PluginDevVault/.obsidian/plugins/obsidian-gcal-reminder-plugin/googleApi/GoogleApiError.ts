@@ -1,4 +1,4 @@
-import type { ApiRequestData } from "../helper/types";
+import type { ApiRequestData } from "../types/types";
 
 export class GoogleApiError extends Error {
 

@@ -6,52 +6,7 @@
 import type { SplitDirection, TFile } from "obsidian";
 
 
-export interface IGoogleCalendarPluginSettings {
-    // Authentication settings
-	useCustomClient: boolean;
-    googleOAuthServer: string;
-    googleClientId: string;
-    googleClientSecret: string;
-    googleRefreshToken: string;
-	
-    // Notification settings
-    useNotification: boolean;
-	showNotice: boolean;
-	
-    // Event note settings
-    eventNoteNameFormat: string;
-    optionalNotePrefix: string;
-    defaultTemplate: string;
-	defaultFolder: string;
-    autoCreateEventNotes: boolean;
-		autoCreateEventNotesMarker: string;
-        autoCreateEventKeepOpen: boolean;
-        importStartOffset: number;
-        importEndOffset: number;
 
-    // Calendar settings
-    defaultCalendar: string;
-    calendarBlackList: [string, string][];
-	ignorePatternList: string[];
-    insertTemplates: Template[];
-    useDefaultTemplate: boolean;
-    
-    // Daily note settings
-    activateDailyNoteAddon: boolean;
-    dailyNoteDotColor: string;
-    useWeeklyNotes: boolean;
-    
-    // Hidden settings
-    timelineHourFormat: number;
-    usDateFormat: boolean;
-
-    // General settings
-    refreshInterval: number;
-    atAnnotationEnabled: boolean;
-    debugMode: boolean;
-
-	viewSettings: { [type in string]: CodeBlockOptions };
-    }
 
 export interface Template {
 	name: string,
@@ -322,24 +277,7 @@ export interface IGoogleCalendarPluginApi {
     updateEvent: (event:GoogleEvent, updateSingle: boolean) => Promise<GoogleEvent>,
 	createEventNote: (event:GoogleEvent, eventDirectory: string, templatePath: string) => Promise<TFile>,
 }
-export interface CodeBlockOptions {
-	type?: "web" | "month" | "day" | "schedule" | "week" | "year";
-	date?: string;
-	width?: number;
-	height?: number;
-	navigation?: boolean;
-	timespan?: number;
-	include?: string[];
-	exclude?: string[];
-	view?: "day" | "week" | "month" | "agenda";
-	theme?: string;
-	hourRange?: number[];
-	showAllDay?: boolean;
-	offset?: number;
-	size?: number;
-	// Keep this for backwards compatibility with old code blocks replacing with offset
-	dayOffset?: number;
-}
+
 
 
 

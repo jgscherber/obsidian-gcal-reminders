@@ -4,7 +4,7 @@ import type {
 	GoogleEvent,
 	GoogleEventList,
 	ListOptions
-} from "../helper/types";
+} from "../types/types";
 
 import GoogleCalendarPlugin from "src/GoogleCalendarPlugin";
 import { createNotice } from "../helper/NoticeHelper";

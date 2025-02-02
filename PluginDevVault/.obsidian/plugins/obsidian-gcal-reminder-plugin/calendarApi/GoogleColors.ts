@@ -7,7 +7,7 @@
  * 		Keeping the color the calendar color will be used
  */
 
-import type { GoogleEvent } from "../helper/types";
+import type { GoogleEvent } from "../types/types";
 
 const calendarColors = {
    "1": {
