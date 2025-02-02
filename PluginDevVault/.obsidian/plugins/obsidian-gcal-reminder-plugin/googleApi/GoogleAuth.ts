@@ -9,7 +9,6 @@
 
 import type { IncomingMessage, ServerResponse } from 'http';
 
-import GoogleCalendarPlugin from './../GoogleCalendarPlugin';
 import {
 	settingsAreComplete,
 	settingsAreCompleteAndLoggedIn,
@@ -25,7 +24,7 @@ import {
 import { Notice, Platform, requestUrl } from "obsidian";
 import { createNotice } from '../helper/NoticeHelper';
 import { log } from '../helper/log';
-import { IGoogleCalendarPluginSettings } from 'types/types';
+import { IGoogleCalendarPluginSettings } from '../types/IGoogleCalendarPluginSettings';
 
 
 // Not using redirect
@@ -35,7 +34,8 @@ import { IGoogleCalendarPluginSettings } from 'types/types';
 // const PUBLIC_CLIENT_ID = `783376961232-v90b17gr1mj1s2mnmdauvkp77u6htpke.apps.googleusercontent.com`
 
 let _lastRefreshTryMoment = window.moment().subtract(100, "seconds");
-let _authSession = {server: '', verifier: '', challenge: '', state:''};
+interface IAuthSession {server: string; verifier: string; challenge: string; state: string; }
+let _authSession : IAuthSession = {server: '', verifier: '', challenge: '', state:''};
 
 
 function generateState(): string {
@@ -109,7 +109,7 @@ const refreshAccessToken = async (settings: IGoogleCalendarPluginSettings): Prom
 
 // TODO prettier config of braces on own line....
 const exchangeCodeForTokenCustom = async (
-    plugin: GoogleCalendarPlugin,
+    settings: IGoogleCalendarPluginSettings,
     state: string,
     verifier:string,
     code: string,
@@ -117,8 +117,8 @@ const exchangeCodeForTokenCustom = async (
 {
 	const url = `https://oauth2.googleapis.com/token`
 	+ `?grant_type=authorization_code`
-	+ `&client_id=${plugin.settings.googleClientId?.trim()}`
-	+ `&client_secret=${plugin.settings.googleClientSecret?.trim()}`
+	+ `&client_id=${settings.googleClientId?.trim()}`
+	+ `&client_secret=${settings.googleClientSecret?.trim()}`
 	+ `&code_verifier=${verifier}`
 	+ `&code=${code}`
 	+ `&state=${state}`
@@ -140,7 +140,9 @@ const exchangeCodeForTokenCustom = async (
  * 
  * @returns A valid access Token
  */
-export async function getGoogleAuthToken(plugin: GoogleCalendarPlugin): Promise<string> {
+export async function getGoogleAuthToken(
+    settings: IGoogleCalendarPluginSettings): Promise<string | undefined>
+{
 	// Check if refresh token is set
 	if (!settingsAreCompleteAndLoggedIn()) return;
 
@@ -148,21 +150,22 @@ export async function getGoogleAuthToken(plugin: GoogleCalendarPlugin): Promise<
 
 	//Check if the Access token is still valid or if it needs to be refreshed
 	if (!accessToken) {
-		accessToken = await refreshAccessToken(plugin);		
+		accessToken = await refreshAccessToken(settings);		
 	}
 
-	// Check if refresh of access token did non work
-	if(!accessToken)return
+	// Check if refresh of access token did not work
+	if(!accessToken) return
 
 	return accessToken;
 }
 
 
-export async function StartLoginGoogleMobile(): Promise<void> {
-	const plugin = GoogleCalendarPlugin.getInstance();
-	const useCustomClient = plugin.settings.useCustomClient;
+export async function StartLoginGoogleMobile(
+    settings: IGoogleCalendarPluginSettings
+): Promise<void>
+{
 
-	const CLIENT_ID = useCustomClient ? plugin.settings.googleClientId : PUBLIC_CLIENT_ID;
+	const CLIENT_ID = settings.googleClientId
 	
 	if(!_authSession.state){
 		_authSession.state = generateState();
@@ -184,14 +187,20 @@ export async function StartLoginGoogleMobile(): Promise<void> {
 	window.open(authUrl);
 }
 
-export async function FinishLoginGoogleMobile(code:string, state:string): Promise<void> {
-	const plugin = GoogleCalendarPlugin.getInstance();
+export async function FinishLoginGoogleMobile(
+    code:string,
+    state:string,
+    settings: IGoogleCalendarPluginSettings,
+    successCallback: () => any
+    ): Promise<void>
+{
+	//const plugin = GoogleCalendarPlugin.getInstance();
 
 	if (state !== _authSession.state) {
 		return;
 	}
 
-	const token = await exchangeCodeForTokenCustom(GoogleCalendarPlugin.getInstance(), state, _authSession.verifier, code, true);
+	const token = await exchangeCodeForTokenCustom(settings, state, _authSession.verifier, code, true);
 
 	if(token?.refresh_token) {
 		setRefreshToken(token.refresh_token);
@@ -199,9 +208,9 @@ export async function FinishLoginGoogleMobile(code:string, state:string): Promis
 		setExpirationTime(+new Date() + token.expires_in * 1000);
 
 		new Notice("Login successful!");
-		plugin.settingsTab.display();
+		successCallback(); //plugin.settingsTab.display(); // TODO what does this do??
 	}
-	_authSession = {server: null, verifier: null, challenge: null, state:null};
+	_authSession = {server: '', verifier: '', challenge: '', state:''};
 }
 
 /**
