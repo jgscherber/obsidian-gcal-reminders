@@ -7,12 +7,10 @@
 */
 
 
-import type { IncomingMessage, ServerResponse } from 'http';
 
-import {
-	settingsAreComplete,
-	settingsAreCompleteAndLoggedIn,
-} from "../view/GoogleCalendarSettingTab";
+// import {
+// 	settingsAreCompleteAndLoggedIn,
+// } from "../view/GoogleCalendarSettingTab";
 import {
 	getAccessToken,
 	getExpirationTime,
@@ -109,24 +107,39 @@ const refreshAccessToken = async (settings: IGoogleCalendarPluginSettings): Prom
 // TODO prettier config of braces on own line....
 const exchangeCodeForTokenCustom = async (
     settings: IGoogleCalendarPluginSettings,
-    state: string,
-    verifier:string,
-    codeChallenge: string,
-    isMobile: boolean): Promise<any> =>
+    userProvidedCode: string): Promise<any> =>
 {
-	const url = `https://oauth2.googleapis.com/token`
-        + `?grant_type=authorization_code`
-        + `&client_id=${settings.googleClientId?.trim()}`
-        + `&client_secret=${settings.googleClientSecret?.trim()}`
-        + `&code_verifier=${verifier}`
-        + `&code=${code}`
-        + `&state=${state}`
-        + `&redirect_uri=${isMobile ? REDIRECT_URL_MOBILE :REDIRECT_URL}`
+	// const url = `https://oauth2.googleapis.com/token`
+    //     + `?grant_type=authorization_code`
+    //     + `&client_id=${settings.googleClientId?.trim()}`
+    //     + `&client_secret=${settings.googleClientSecret?.trim()}`
+    //     + `&code_verifier=${verifier}`
+    //     + `&code=${code}`
+    //     + `&state=${state}`
+    //     + `&redirect_uri=${isMobile ? REDIRECT_URL_MOBILE :REDIRECT_URL}`
 
-	const response = await fetch(url,{
-		method: 'POST',
-		headers: {'content-type': 'application/x-www-form-urlencoded'},
-	});
+	// const response = await fetch(url,{
+	// 	method: 'POST',
+	// 	headers: {'content-type': 'application/x-www-form-urlencoded'},
+	// });
+
+    const tokenUrl = 'https://oauth2.googleapis.com/token';
+    const params = new URLSearchParams({
+        code: userProvidedCode,
+        client_id: settings.googleClientId?.trim(),
+        client_secret: settings.googleClientSecret?.trim(),
+        redirect_uri: 'urn:ietf:wg:oauth:2.0:oob',
+        grant_type: 'authorization_code',
+        code_verifier: _authSession.verifier,
+    });
+
+    const response = await fetch(tokenUrl, {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString()
+    });
 
 	return response.json();
 }
@@ -143,7 +156,7 @@ export async function getGoogleAuthToken(
     settings: IGoogleCalendarPluginSettings): Promise<string | undefined>
 {
 	// Check if refresh token is set
-	if (!settingsAreCompleteAndLoggedIn()) return;
+	// TODO if (!settingsAreCompleteAndLoggedIn()) returna;
 
 	let accessToken = getAccessIfValid();
 
@@ -196,19 +209,14 @@ export async function StartLoginGoogleMobile(
 }
 
 export async function FinishLoginGoogleMobile(
-    code:string,
-    state:string,
+    userProvidedCode:string,
     settings: IGoogleCalendarPluginSettings,
     successCallback: () => any
     ): Promise<void>
 {
-	//const plugin = GoogleCalendarPlugin.getInstance();
-
-	if (state !== _authSession.state) {
-		return;
-	}
-
-	const token = await exchangeCodeForTokenCustom(settings, state, _authSession.verifier, code, true);
+	const token = await exchangeCodeForTokenCustom(
+        settings,
+        userProvidedCode);
 
 	if(token?.refresh_token) {
 		setRefreshToken(token.refresh_token);
@@ -218,6 +226,8 @@ export async function FinishLoginGoogleMobile(
 		new Notice("Login successful!");
 		successCallback(); //plugin.settingsTab.display(); // TODO what does this do??
 	}
+
+    // Auth process is done, clear values
 	_authSession = {server: '', verifier: '', challenge: '', state:''};
 }
 
@@ -251,17 +261,17 @@ export async function LoginGoogle(
 		_authSession.challenge = await generateChallenge(_authSession.verifier);
 	}
 
-    // TODO this needs to be different ... we're not redirecting, we want a code
-	const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
-	+ `?client_id=${CLIENT_ID}`
-	+ `&response_type=code`
-	+ `&redirect_uri=${REDIRECT_URL}`
-	+ `&prompt=consent`
-	+ `&access_type=offline`
-	+ `&state=${_authSession.state}`
-	+ `&code_challenge=${_authSession.challenge}`
-	+ `&code_challenge_method=S256`
-	+ `&scope=https://www.googleapis.com/auth/calendar.readonly%20https://www.googleapis.com/auth/calendar.events`;
+    // // TODO this needs to be different ... we're not redirecting, we want a code
+	// const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
+	// + `?client_id=${CLIENT_ID}`
+	// + `&response_type=code`
+	// + `&redirect_uri=${REDIRECT_URL}`
+	// + `&prompt=consent`
+	// + `&access_type=offline`
+	// + `&state=${_authSession.state}`
+	// + `&code_challenge=${_authSession.challenge}`
+	// + `&code_challenge_method=S256`
+	// + `&scope=https://www.googleapis.com/auth/calendar.readonly%20https://www.googleapis.com/auth/calendar.events`;
 	
 
     // TODO I don't think any of this auth session stuff is needed because it's only used for the redirect

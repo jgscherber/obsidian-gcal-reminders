@@ -3,7 +3,7 @@ import {
     Notice,
     Modal
 } from 'obsidian';
-import { StartLoginGoogleMobile } from 'googleApi/GoogleAuth';
+import { FinishLoginGoogleMobile, StartLoginGoogleMobile } from 'googleApi/GoogleAuth';
 import { IGoogleCalendarPluginSettings } from 'types/IGoogleCalendarPluginSettings';
 
 export class AuthCodeModal extends Modal {
@@ -43,9 +43,8 @@ export class AuthCodeModal extends Modal {
             cls: 'mod-cta'
         });
         openAuthButton.addEventListener('click', () => {
-            // TODO I thnk this is where LoginGoogle should be called from
+            new Notice('Opening Google authentication page in your browser...');
             StartLoginGoogleMobile(this._pluginSettings);
-            //window.open(this.authUrl);
         });
 
         // Create input for auth code
@@ -71,18 +70,10 @@ export class AuthCodeModal extends Modal {
             }
 
             try {
-                // const { tokens } = await this._oauth2Client.getToken(code);
-                // if (tokens.refresh_token) {
-                //     this._pluginSettings.googleRefreshToken = tokens.refresh_token;
-                //     await this._successCallbackAsync();
-                //     // TODO move these into callback
-                //     // await this._plugin.saveSettings();
-                //     // this._plugin.setupGoogleAuth();
-                //     new Notice('Successfully authenticated with Google Calendar!');
-                //     this.close();
-                // } else {
-                //     new Notice('No refresh token received. Please try again.');
-                // }
+                await FinishLoginGoogleMobile(
+                    code,
+                    this._pluginSettings,
+                    this._successCallbackAsync());
             } catch (error) {
                 console.error('Error getting tokens:', error);
                 new Notice('Failed to authenticate. Please try again.');
