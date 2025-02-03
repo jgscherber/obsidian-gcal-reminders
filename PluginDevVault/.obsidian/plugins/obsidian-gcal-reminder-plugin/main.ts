@@ -56,7 +56,7 @@ export default class GCalReminderPlugin extends Plugin {
         this.googleAuth = new google.auth.OAuth2(
             this.settings.googleClientId,
             this.settings.googleClientSecret,
-            'urn:ietf:wg:oauth:2.0:oob'  // For manual copy/paste flow
+            'urn:ietf:wg:oauth:2.0:oob'  // For manual copy/paste flow ... AKA "out of band" OOB
         );
         
         // TODO: WHATS THIS REFRESH??  

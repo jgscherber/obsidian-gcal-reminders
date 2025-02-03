@@ -3,7 +3,7 @@ import {
     Notice,
     Modal
 } from 'obsidian';
-import { LoginGoogle } from 'googleApi/GoogleAuth';
+import { StartLoginGoogleMobile } from 'googleApi/GoogleAuth';
 import { IGoogleCalendarPluginSettings } from 'types/IGoogleCalendarPluginSettings';
 
 export class AuthCodeModal extends Modal {
@@ -44,7 +44,7 @@ export class AuthCodeModal extends Modal {
         });
         openAuthButton.addEventListener('click', () => {
             // TODO I thnk this is where LoginGoogle should be called from
-            LoginGoogle(this._pluginSettings);
+            StartLoginGoogleMobile(this._pluginSettings);
             //window.open(this.authUrl);
         });
 
@@ -71,18 +71,18 @@ export class AuthCodeModal extends Modal {
             }
 
             try {
-                const { tokens } = await this._oauth2Client.getToken(code);
-                if (tokens.refresh_token) {
-                    this._pluginSettings.googleRefreshToken = tokens.refresh_token;
-                    await this._successCallbackAsync();
-                    // TODO move these into callback
-                    // await this._plugin.saveSettings();
-                    // this._plugin.setupGoogleAuth();
-                    new Notice('Successfully authenticated with Google Calendar!');
-                    this.close();
-                } else {
-                    new Notice('No refresh token received. Please try again.');
-                }
+                // const { tokens } = await this._oauth2Client.getToken(code);
+                // if (tokens.refresh_token) {
+                //     this._pluginSettings.googleRefreshToken = tokens.refresh_token;
+                //     await this._successCallbackAsync();
+                //     // TODO move these into callback
+                //     // await this._plugin.saveSettings();
+                //     // this._plugin.setupGoogleAuth();
+                //     new Notice('Successfully authenticated with Google Calendar!');
+                //     this.close();
+                // } else {
+                //     new Notice('No refresh token received. Please try again.');
+                // }
             } catch (error) {
                 console.error('Error getting tokens:', error);
                 new Notice('Failed to authenticate. Please try again.');

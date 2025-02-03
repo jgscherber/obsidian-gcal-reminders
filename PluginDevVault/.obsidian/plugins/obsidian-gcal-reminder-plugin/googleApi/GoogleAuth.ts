@@ -75,7 +75,6 @@ export function getAccessIfValid(): string | undefined {
 	return getAccessToken();
 }
 
-
 const refreshAccessToken = async (settings: IGoogleCalendarPluginSettings): Promise<string | undefined> => {
 
 	// if(lastRefreshTryMoment.diff(window.moment(), "seconds") < 60){
@@ -112,17 +111,17 @@ const exchangeCodeForTokenCustom = async (
     settings: IGoogleCalendarPluginSettings,
     state: string,
     verifier:string,
-    code: string,
+    codeChallenge: string,
     isMobile: boolean): Promise<any> =>
 {
 	const url = `https://oauth2.googleapis.com/token`
-	+ `?grant_type=authorization_code`
-	+ `&client_id=${settings.googleClientId?.trim()}`
-	+ `&client_secret=${settings.googleClientSecret?.trim()}`
-	+ `&code_verifier=${verifier}`
-	+ `&code=${code}`
-	+ `&state=${state}`
-	+ `&redirect_uri=${isMobile ? REDIRECT_URL_MOBILE :REDIRECT_URL}`
+        + `?grant_type=authorization_code`
+        + `&client_id=${settings.googleClientId?.trim()}`
+        + `&client_secret=${settings.googleClientSecret?.trim()}`
+        + `&code_verifier=${verifier}`
+        + `&code=${code}`
+        + `&state=${state}`
+        + `&redirect_uri=${isMobile ? REDIRECT_URL_MOBILE :REDIRECT_URL}`
 
 	const response = await fetch(url,{
 		method: 'POST',
@@ -161,29 +160,38 @@ export async function getGoogleAuthToken(
 
 
 export async function StartLoginGoogleMobile(
-    settings: IGoogleCalendarPluginSettings
-): Promise<void>
+    settings: IGoogleCalendarPluginSettings) : Promise<void>
 {
 
-	const CLIENT_ID = settings.googleClientId
-	
 	if(!_authSession.state){
 		_authSession.state = generateState();
 		_authSession.verifier = await generateVerifier();
 		_authSession.challenge = await generateChallenge(_authSession.verifier);
 	}
 
-	const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
-	+ `?client_id=${CLIENT_ID}`
-	+ `&response_type=code`
-	+ `&redirect_uri=${REDIRECT_URL_MOBILE}`
-	+ `&prompt=consent`
-	+ `&access_type=offline`
-	+ `&state=${_authSession.state}`
-	+ `&code_challenge=${_authSession.challenge}`
-	+ `&code_challenge_method=S256`
-	+ `&scope=https://www.googleapis.com/auth/calendar.readonly%20https://www.googleapis.com/auth/calendar.events`;
+	// const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
+	// + `?client_id=${CLIENT_ID}`
+	// + `&response_type=code`
+	// + `&redirect_uri=${REDIRECT_URL_MOBILE}`
+	// + `&prompt=consent`
+	// + `&access_type=offline`
+	// + `&state=${_authSession.state}`
+	// + `&code_challenge=${_authSession.challenge}`
+	// + `&code_challenge_method=S256`
+	// + `&scope=https://www.googleapis.com/auth/calendar.readonly%20https://www.googleapis.com/auth/calendar.events`;
 
+    const scope = 'https://www.googleapis.com/auth/tasks' // TODO better place
+    const authUrl = `https://accounts.google.com/o/oauth2/v2/auth`
+        + `?client_id=${settings.googleClientId?.trim()}`
+        + `&response_type=code`
+        + `&scope=${encodeURIComponent(scope)}`
+        + `&redirect_uri=urn:ietf:wg:oauth:2.0:oob`
+        + `&state=${_authSession.state}`
+        + `&code_challenge=${_authSession.challenge}`
+        + `&code_challenge_method=S256`
+        + `&access_type=offline`
+
+    console.log(authUrl);
 	window.open(authUrl);
 }
 
