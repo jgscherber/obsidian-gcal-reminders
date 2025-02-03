@@ -13,77 +13,7 @@ import { OAuth2Client } from 'google-auth-library';
 import { format } from 'date-fns';
 import { AuthCodeModal } from 'views/AuthCodeModal'
 import { IGoogleCalendarPluginSettings } from 'types/IGoogleCalendarPluginSettings';
-
-
-interface GCalReminderSettings {
-    clientId: string;
-    clientSecret: string;
-    refreshToken: string | null;
-}
-
-
-
-class DateTimePickerModal extends Modal {
-    onSubmit: (result: Date) => void;
-
-    constructor(app: App, onSubmit: (result: Date) => void) {
-        super(app);
-        this.onSubmit = onSubmit;
-    }
-
-    onOpen() {
-        const { contentEl } = this;
-        contentEl.empty();
-
-        contentEl.createEl('h2', { text: 'Set Reminder Date and Time' });
-
-        // Create container for the picker
-        const pickerContainer = contentEl.createDiv({ cls: 'datetime-picker-container' });
-        
-        // Create datetime picker
-        const dateTimeInput = pickerContainer.createEl('input', {
-            type: 'datetime-local',
-            cls: 'datetime-input'
-        });
-
-        // Set default to next hour
-        const now = new Date();
-        now.setHours(now.getHours() + 1, 0, 0, 0);
-        dateTimeInput.value = now.toISOString().slice(0, 16);
-
-        // Create button container
-        const buttonContainer = contentEl.createDiv({ 
-            cls: 'datetime-picker-buttons',
-            attr: { style: 'margin-top: 20px;' }
-        });
-
-        // Create submit button
-        const submitBtn = buttonContainer.createEl('button', { 
-            text: 'Create Reminder',
-            cls: 'mod-cta'
-        });
-        
-        submitBtn.addEventListener('click', () => {
-            const selectedDate = new Date(dateTimeInput.value);
-            if (!isNaN(selectedDate.getTime())) {
-                this.close();
-                this.onSubmit(selectedDate);
-            } else {
-                new Notice('Please select a valid date and time');
-            }
-        });
-
-        // Add some basic styles
-        pickerContainer.style.textAlign = 'center';
-        dateTimeInput.style.margin = '20px 0';
-        dateTimeInput.style.padding = '8px';
-    }
-
-    onClose() {
-        const { contentEl } = this;
-        contentEl.empty();
-    }
-}
+import { DateTimePickerModal } from 'views/DateTimePickerModal';
 
 export default class GCalReminderPlugin extends Plugin {
     settings: IGoogleCalendarPluginSettings;
@@ -268,19 +198,18 @@ export default class GCalReminderPlugin extends Plugin {
     }
 
     createObsidianUrl(file: TFile, blockId: string): string {
-        // Get the file path and encode the entire path including any # symbols
-        const filePath = file.path.replace(/#/g, '%23');
-        
-        // Create the URL with the block reference
-        // TODO: prefix with special redirect URL thing
-        return `obsidian://open?vault=${encodeURIComponent(this.app.vault.getName())}&file=${filePath}%23%5E${blockId}`;
+        const filePath = file.path; //.replace(/#/g, '%23');
+        const helperUrl = this.settings.obsidianRedirctHelperUrl;
+        const obsidianUrl = `obsidian://open?vault=${this.app.vault.getName()}&file=${filePath}#^${blockId}`;
+        return `${helperUrl}?${encodeURIComponent(obsidianUrl)}`;
     }
 
     async loadSettings() {
         this.settings = Object.assign({
             clientId: '',
             clientSecret: '',
-            refreshToken: null
+            refreshToken: '',
+            obsidianRedirctHelperUrl: ''
         }, await this.loadData());
     }
 
@@ -324,14 +253,30 @@ class GCalReminderSettingTab extends PluginSettingTab {
                 }));
 
         new Setting(containerEl)
+                .setName('Obsidian Redirect URL')
+                .setDesc('URL which will perform the redirect for the appended Obsidian link')
+                .addText(text => text
+                    .setPlaceholder('Enter redirect URL')
+                    .setValue(this.plugin.settings.obsidianRedirctHelperUrl)
+                    // TODO why is there both setValue and onChange??
+                    .onChange(async (value) => {
+                        this.plugin.settings.obsidianRedirctHelperUrl = value;
+                        await this.plugin.saveSettings();
+                    }));
+
+        new Setting(containerEl)
             .setName('Authentication')
             .setDesc('Connect to Google Calendar')
             .addButton(button => button
                 .setButtonText(this.plugin.settings.googleRefreshToken ? 'Re-authenticate' : 'Connect to Google Calendar')
                 .onClick(() => {
-                    if (this.plugin.settings.googleClientId && this.plugin.settings.googleClientSecret) {
+                    if (this.plugin.settings.googleClientId
+                        && this.plugin.settings.googleClientSecret)
+                    {
                         this.plugin.initiateAuth();
-                    } else {
+                    }
+                    else
+                    {
                         new Notice('Please enter Client ID and Client Secret first');
                     }
                 }));
