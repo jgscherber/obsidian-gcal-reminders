@@ -68,25 +68,22 @@ export default class GCalReminderPlugin extends Plugin {
     }
 
     initiateAuth() {
-        if (!this.googleAuth) {
-            this.setupGoogleAuth();
-        }
+        // if (!this.googleAuth) {
+        //     this.setupGoogleAuth();
+        // }
 
-        const authUrl = this.googleAuth.generateAuthUrl({
-            access_type: 'offline',
-            // TODO: Event vs. Task
-            //scope: ['https://www.googleapis.com/auth/calendar'],
-            scope: ['https://www.googleapis.com/auth/tasks'],
-            prompt: 'consent'
-        });
+        // const authUrl = this.googleAuth.generateAuthUrl({
+        //     access_type: 'offline',
+        //     // TODO: Event vs. Task
+        //     //scope: ['https://www.googleapis.com/auth/calendar'],
+        //     scope: ['https://www.googleapis.com/auth/tasks'],
+        //     prompt: 'consent'
+        // });
 
         async function successCallback() : Promise<any> {
-            await this.googleAuth.saveSettings();
-            this.googleAuth.setupGoogleAuth();
         }
         new AuthCodeModal(
             this.app, 
-            authUrl,
             this.settings,
             successCallback).open();
     }

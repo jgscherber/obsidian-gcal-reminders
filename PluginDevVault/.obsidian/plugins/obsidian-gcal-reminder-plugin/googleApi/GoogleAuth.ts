@@ -21,7 +21,7 @@ import {
 } from "../helper/LocalStorage";
 import { Notice, Platform, requestUrl } from "obsidian";
 import { createNotice } from '../helper/NoticeHelper';
-import { log } from '../helper/log';
+// import { log } from '../helper/log';
 import { IGoogleCalendarPluginSettings } from '../types/IGoogleCalendarPluginSettings';
 
 
@@ -224,7 +224,7 @@ export async function FinishLoginGoogleMobile(
 		setExpirationTime(+new Date() + token.expires_in * 1000);
 
 		new Notice("Login successful!");
-		successCallback(); //plugin.settingsTab.display(); // TODO what does this do??
+		successCallback();
 	}
 
     // Auth process is done, clear values

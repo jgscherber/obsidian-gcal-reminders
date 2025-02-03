@@ -7,21 +7,17 @@ import { FinishLoginGoogleMobile, StartLoginGoogleMobile } from 'googleApi/Googl
 import { IGoogleCalendarPluginSettings } from 'types/IGoogleCalendarPluginSettings';
 
 export class AuthCodeModal extends Modal {
-    // TODO setting so class variables are prefixed with _
-    _authUrl: string;
-    _pluginSettings: IGoogleCalendarPluginSettings;
-    private _successCallbackAsync: () => any;
+    pluginSettings: IGoogleCalendarPluginSettings;
+    private successCallbackAsync: () => any;
 
     constructor(
         app: App,
-        authUrl: string,
         pluginSettings: IGoogleCalendarPluginSettings,
         successCallback: () => Promise<any>)
     {
         super(app);
-        this._authUrl = authUrl;
-        this._pluginSettings = pluginSettings;
-        this._successCallbackAsync = successCallback;
+        this.pluginSettings = pluginSettings;
+        this.successCallbackAsync = successCallback;
     }
 
     onOpen() {
@@ -44,7 +40,7 @@ export class AuthCodeModal extends Modal {
         });
         openAuthButton.addEventListener('click', () => {
             new Notice('Opening Google authentication page in your browser...');
-            StartLoginGoogleMobile(this._pluginSettings);
+            StartLoginGoogleMobile(this.pluginSettings);
         });
 
         // Create input for auth code
@@ -72,11 +68,10 @@ export class AuthCodeModal extends Modal {
             try {
                 await FinishLoginGoogleMobile(
                     code,
-                    this._pluginSettings,
-                    this._successCallbackAsync());
+                    this.pluginSettings,
+                    this.successCallbackAsync);
             } catch (error) {
                 console.error('Error getting tokens:', error);
-                new Notice('Failed to authenticate. Please try again.');
             }
         });
     }
