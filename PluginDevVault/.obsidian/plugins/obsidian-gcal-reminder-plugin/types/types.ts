@@ -4,6 +4,7 @@
  */
 
 import type { SplitDirection, TFile } from "obsidian";
+import { inherits } from "util";
 
 
 
@@ -59,8 +60,34 @@ export interface GoogleCalendarList {
 	items: [GoogleCalendar];
 }
 
+// https://developers.google.com/tasks/reference/rest/v1/tasks
 export interface GoogleTask {
-    
+    id: string,
+    etag: string,
+    title: string,
+    notes: string | null,
+    status: string,
+    due: string | null,
+    completed: string | null,
+    deleted: boolean,
+    hidden: boolean,
+}
+
+export interface GoogleTaskResponse extends GoogleTask {
+    kind: string, // Always "tasks#task"
+    updated: string,
+    selfLink: string,
+    parent: string | null,
+    position: string,
+    links: [
+      {
+        type: string,
+        description: string,
+        link: string
+      }
+    ],
+    webViewLink: string,
+    assignmentInfo: any,
 }
 
 export interface GoogleEvent {
