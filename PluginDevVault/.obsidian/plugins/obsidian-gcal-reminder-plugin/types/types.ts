@@ -62,15 +62,15 @@ export interface GoogleCalendarList {
 
 // https://developers.google.com/tasks/reference/rest/v1/tasks
 export interface GoogleTask {
-    id: string,
-    etag: string,
+    id?: string,
+    etag?: string,
     title: string,
-    notes: string | null,
-    status: string,
-    due: string | null,
-    completed: string | null,
-    deleted: boolean,
-    hidden: boolean,
+    notes: string,
+    status?: string,
+    due: string,
+    completed?: string,
+    deleted?: boolean,
+    hidden?: boolean,
 }
 
 export interface GoogleTaskResponse extends GoogleTask {

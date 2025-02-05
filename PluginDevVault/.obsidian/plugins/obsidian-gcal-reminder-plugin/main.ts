@@ -14,6 +14,8 @@ import { format } from 'date-fns';
 import { AuthCodeModal } from 'views/AuthCodeModal'
 import { IGoogleCalendarPluginSettings } from 'types/IGoogleCalendarPluginSettings';
 import { DateTimePickerModal } from 'views/DateTimePickerModal';
+import { GoogleTask } from 'types/types';
+import { GoogleTaskApiService } from 'tasksApi/GoogleTaskApiService';
 
 export default class GCalReminderPlugin extends Plugin {
     settings: IGoogleCalendarPluginSettings;
@@ -135,29 +137,41 @@ export default class GCalReminderPlugin extends Plugin {
         line: string,
         blockId: string) : Promise<string>
         {
-            const taskListName = 'Obsidian';
+            // const taskListName = 'Obsidian';
 
-            new Notice("Creating task in Google Tasks");
-            const tasks = google.tasks({ version: 'v1', auth: this.googleAuth });
+            // new Notice("Creating task in Google Tasks");
+            // const tasks = google.tasks({ version: 'v1', auth: this.googleAuth });
 
-            const tasklists = await tasks.tasklists.list();
-            const tasklist = tasklists?.data?.items?.find((list) => list.title === taskListName);
-            if (!tasklist) {
-                new Notice('No task list found with the name ' + taskListName);
-                return '';
-            }
+            // const tasklists = await tasks.tasklists.list();
+            // const tasklist = tasklists?.data?.items?.find((list) => list.title === taskListName);
+            // if (!tasklist) {
+            //     new Notice('No task list found with the name ' + taskListName);
+            //     return '';
+            // }
 
-            const task = await tasks.tasks.insert({
-                tasklist: tasklist.id!,
-                requestBody: {
-                    title: line.trim() || 'Obsidian Reminder',
-                    notes: this.createObsidianUrl(file, blockId),
-                    due: date.toISOString()
-                }
-            });
+            // TODO real setting
+            this.settings.googleTaskListId = "Obsidian";
+            const taskRequest : GoogleTask = {
+                title: line.trim() || 'Obsidian Reminder',
+                notes: this.createObsidianUrl(file, blockId),
+                due: date.toISOString()
+            };
+
+            const taskService = new GoogleTaskApiService(this.settings);
+
+            // const task = await tasks.tasks.insert({
+            //     tasklist: tasklist.id!,
+            //     requestBody: {
+            //         title: line.trim() || 'Obsidian Reminder',
+            //         notes: this.createObsidianUrl(file, blockId),
+            //         due: date.toISOString()
+            //     }
+            // });
+
+            const task = await taskService.googleCreateEvent(taskRequest);
 
             // Get the task URL
-            return task.data.webViewLink || '';
+            return task.webViewLink || '';
         }
 
     async createCalendarEvent(
