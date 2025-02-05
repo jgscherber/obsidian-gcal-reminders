@@ -1,16 +1,21 @@
 import { getGoogleAuthToken } from "../googleApi/GoogleAuth";
-import GoogleCalendarPlugin from "../GoogleCalendarPlugin";
+// import GoogleCalendarPlugin from "../GoogleCalendarPlugin";
 import { GoogleApiError } from "../googleApi/GoogleApiError";
 import { requestUrl } from "obsidian";
 // import { log } from "./log";
 
-export const callRequest = async (url: string, method: string, body: any, noAuth = false): Promise<any> => {
+export const callRequest = async (
+        url: string,
+        method: string,
+        body: any,
+        bearerToken: string,
+        // TODO pass auth settings in here
+        noAuth = false): Promise<any> =>
+    {
 
-    const plugin = GoogleCalendarPlugin.getInstance();
-
-    const requestHeaders = { 'Content-Type': 'application/json' };
+    const requestHeaders: any = { 'Content-Type': 'application/json' };
     if (noAuth == false) {
-        const bearer = await getGoogleAuthToken(plugin);
+        const bearer = bearerToken;
         if (!bearer) {
             throw new GoogleApiError("Error Google API request", 
                 { method, url, body, },
