@@ -59,6 +59,10 @@ export interface GoogleCalendarList {
 	items: [GoogleCalendar];
 }
 
+export interface GoogleTask {
+    
+}
+
 export interface GoogleEvent {
 	parent?: GoogleCalendar;
 	kind?: "calendar#event";
