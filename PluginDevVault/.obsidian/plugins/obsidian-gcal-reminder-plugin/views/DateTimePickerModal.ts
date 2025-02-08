@@ -8,6 +8,8 @@ import {
 // "It isn't possible to read or write the time that a task is due via the API."
 // source: https://developers.google.com/tasks/reference/rest/v1/tasks#Task
 // issue: https://issuetracker.google.com/issues/166896024
+// 
+// MS To-do API allows setting time: https://learn.microsoft.com/en-us/graph/api/todotasklist-post-tasks?view=graph-rest-1.0&tabs=http
 // ********************************
 export class DateTimePickerModal extends Modal {
     onSubmit: (result: Date) => void;
