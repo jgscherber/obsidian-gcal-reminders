@@ -70,6 +70,7 @@ export class GoogleTaskApiService {
 
         console.log("Creating task", googleTask);
         console.log("Bearer token", bearerToken);
+        console.log("Task", googleTask);
         const callResponse = await callRequest(
             `https://tasks.googleapis.com/tasks/v1/lists/${taskListId}/tasks`,
             'POST',

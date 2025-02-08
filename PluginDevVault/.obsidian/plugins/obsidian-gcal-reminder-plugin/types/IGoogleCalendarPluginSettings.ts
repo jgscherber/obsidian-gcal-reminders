@@ -1,5 +1,6 @@
 
 export interface IGoogleCalendarPluginSettings {
+    obsidianTag: string;
     // Authentication settings
     googleOAuthServer: string;
     googleClientId: string;

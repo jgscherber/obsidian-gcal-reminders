@@ -1,10 +1,5 @@
-  #reminder [2025-01-29 06:00](https://www.google.com/calendar/event?eid=a3Awa2s1dWc4ODMwazFxcGZidGwxbmhoNWcgamdzY2hlcmJlckBt) ^genxn6
- #reminder [2025-01-29 06:00](https://www.google.com/calendar/event?eid=MDZpbDVvMHFicDdxM3FrZ2k2OTRuNmllODAgamdzY2hlcmJlckBt) ^pav7wq
-  #reminder [2025-01-29 06:00](https://www.google.com/calendar/event?eid=ZDgzdWc2MTYxaTlpNTJzanA3Y25xYWVtbmsgamdzY2hlcmJlckBt) ^wbvzwz
- #reminder [2025-01-29 06:00](https://tasks.google.com/task/kHXUZChAKpH_9Wro?sa=6) ^m6zmwf
- 
- 
- 
+- I need to do this soon!!!  #reminder [2025-02-08 14:00](https://tasks.google.com/task/6bV5_T-ydFAZFFe8?sa=6) ^88w2ia
+- asdfasdf  #reminder/generated [2025-02-08 20:00](https://tasks.google.com/task/q86U814ypH9Dy5YD?sa=6) ^rinfhu
 
 
 IDK why this doesn't work

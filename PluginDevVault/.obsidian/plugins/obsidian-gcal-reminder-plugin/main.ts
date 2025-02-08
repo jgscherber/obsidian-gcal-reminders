@@ -127,7 +127,8 @@ export default class GCalReminderPlugin extends Plugin {
             
             // Update the line with the new format: text #reminder [datetime](gcal_URL) ^blockId
             const formattedDateTime = format(date, 'yyyy-MM-dd HH:mm');
-            const updatedLine = `${line} #reminder [${formattedDateTime}](${calendarUrl}) ^${blockId}`;
+            const reminderTag = this.settings.obsidianTag;
+            const updatedLine = `${line} #${reminderTag} [${formattedDateTime}](${calendarUrl}) ^${blockId}`;
             editor.setLine(cursor.line, updatedLine);
 
             new Notice('Reminder created successfully!');
@@ -155,18 +156,6 @@ export default class GCalReminderPlugin extends Plugin {
         line: string,
         blockId: string) : Promise<string>
         {
-            // const taskListName = 'Obsidian';
-
-            // new Notice("Creating task in Google Tasks");
-            // const tasks = google.tasks({ version: 'v1', auth: this.googleAuth });
-
-            // const tasklists = await tasks.tasklists.list();
-            // const tasklist = tasklists?.data?.items?.find((list) => list.title === taskListName);
-            // if (!tasklist) {
-            //     new Notice('No task list found with the name ' + taskListName);
-            //     return '';
-            // }
-
             // TODO real setting
             const taskRequest : GoogleTask = {
                 title: line.trim() || 'Obsidian Reminder',
@@ -191,6 +180,15 @@ export default class GCalReminderPlugin extends Plugin {
             return task?.webViewLink || '';
         }
 
+    CleanupReminderSummary(line: string)
+    {
+        return line
+            .replace('-', '')
+            .replace('#', '')
+            .replace('>', '')
+            .trim();
+    }
+
     async createCalendarEvent(
         date: Date,
         file: TFile,
@@ -199,6 +197,7 @@ export default class GCalReminderPlugin extends Plugin {
     {
         new Notice("Creating event in Google Calendar");
         const calendar = google.calendar({ version: 'v3', auth: this.googleAuth });
+        line = this.CleanupReminderSummary(line);
             
         const event = await calendar.events.insert({
             calendarId: 'primary',
@@ -226,10 +225,10 @@ export default class GCalReminderPlugin extends Plugin {
     }
 
     createObsidianUrl(file: TFile, blockId: string): string {
-        const filePath = file.path; //.replace(/#/g, '%23');
+        const filePath = file.path.replace(/#/g, '%23');
         const helperUrl = this.settings.obsidianRedirctHelperUrl;
-        const obsidianUrl = `obsidian://open?vault=${this.app.vault.getName()}&file=${filePath}#^${blockId}`;
-        return `${helperUrl}?${encodeURIComponent(obsidianUrl)}`;
+        const obsidianUrl = `obsidian://open?vault=${encodeURIComponent(this.app.vault.getName())}&file=${filePath}%23%5E${blockId}`
+        return `${helperUrl}?${obsidianUrl}`;
     }
 
     async loadSettings() {
@@ -241,6 +240,8 @@ export default class GCalReminderPlugin extends Plugin {
         }, await this.loadData());
 
         // TODO add this to UI
+        this.settings.obsidianTag = 'reminder/generated'
+        this.settings.obsidianRedirctHelperUrl = "https://jgscherber.github.io/obsidian-redirect-page";
         this.settings.googleTaskListName = "Obsidian";
     }
 
