@@ -116,35 +116,29 @@ export default class GCalReminderPlugin extends Plugin {
         }
     }
 
+
+
     async CreateTask(
         date: Date,
         file: TFile,
         line: string,
         blockId: string) : Promise<string>
-        {
-            // TODO real setting
-            const taskRequest : GoogleTask = {
-                title: line.trim() || 'Obsidian Reminder',
-                notes: this.createObsidianUrl(file, blockId),
-                due: date.toISOString()
-            };
+    {
+        line = this.CleanupReminderSummary(line).trim();
+        const title = line || file.basename
+        const taskRequest : GoogleTask = {
+            title: title,
+            notes: this.createObsidianUrl(file, blockId),
+            due: date.toISOString()
+        };
 
-            const taskService = new GoogleTaskApiService(this.settings);
+        const taskService = new GoogleTaskApiService(this.settings);
 
-            // const task = await tasks.tasks.insert({
-            //     tasklist: tasklist.id!,
-            //     requestBody: {
-            //         title: line.trim() || 'Obsidian Reminder',
-            //         notes: this.createObsidianUrl(file, blockId),
-            //         due: date.toISOString()
-            //     }
-            // });
+        const task = await taskService.Create(taskRequest);
 
-            const task = await taskService.Create(taskRequest);
-
-            // Get the task URL
-            return task?.webViewLink || '';
-        }
+        // Get the task URL
+        return task?.webViewLink || '';
+    }
 
     CleanupReminderSummary(line: string)
     {
