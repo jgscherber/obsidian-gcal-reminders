@@ -25,13 +25,6 @@ import { createNotice } from '../helper/NoticeHelper';
 // import { log } from '../helper/log';
 import { IGoogleCalendarPluginSettings } from '../types/IGoogleCalendarPluginSettings';
 
-
-// Not using redirect
-// const PORT = 42813;
-// const REDIRECT_URL = `http://127.0.0.1:${PORT}/callback`;
-// const REDIRECT_URL_MOBILE = `https://google-auth-obsidian-redirect.vercel.app/callback`;
-// const PUBLIC_CLIENT_ID = `783376961232-v90b17gr1mj1s2mnmdauvkp77u6htpke.apps.googleusercontent.com`
-
 let _lastRefreshTryMoment = window.moment().subtract(100, "seconds");
 interface IAuthSession {server: string; verifier: string; challenge: string; state: string; }
 let _authSession : IAuthSession = {server: '', verifier: '', challenge: '', state:''};

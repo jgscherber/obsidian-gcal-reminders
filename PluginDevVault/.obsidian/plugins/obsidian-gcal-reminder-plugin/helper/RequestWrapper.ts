@@ -33,56 +33,6 @@ export const callRequest = async (
             requestHeaders['Authorization'] = 'Bearer ' + bearer;
         }
 
-    //Debugged request
-    // if (plugin.settings.debugMode) {
-    //     log(`New Request ${method}:${url}`);
-    
-    //     const sanitizeHeader = { ...requestHeaders };
-    //     if (sanitizeHeader['Authorization']) {
-    //         sanitizeHeader['Authorization'] = sanitizeHeader['Authorization'].substring(0, 15) + "...";
-    //     }
-    //     log({ body, headers: sanitizeHeader });
-        
-    //     let response;
-    //     try {
-    //         response = await fetch(url, {
-    //             method: method,
-    //             body: body ? JSON.stringify(body) : null,
-    //             headers: requestHeaders
-    //         })
-    //     }catch (error) {
-    //         if(response) {
-    //             throw new GoogleApiError("Error Google API request", 
-    //                 { method, url, body, },
-    //                 response.status,
-    //                 (await response.json()),
-    //             );
-    //         } else {
-    //             throw new GoogleApiError("Error Google API request", 
-    //                 { method, url, body, },
-    //                 500,
-    //                 {error: "Unknown Error"},
-    //             );
-    //         }
-    //     }
-
-    //     if (response.status >= 300) {
-    //         throw new GoogleApiError("Error Google API request", 
-    //             { method, url, body, },
-    //             response.status,
-    //             (await response.json()),
-    //         );
-    //     }
-
-    //     if (method.toLowerCase() == "delete") {
-    //         return { status: "success" };
-    //     }
-
-    //     return (await response.json());
-        
-    // }
-
-
         //Normal request
         let response;
         try { 
