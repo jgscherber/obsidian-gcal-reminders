@@ -110,6 +110,7 @@ export default class GCalReminderPlugin extends Plugin {
             new Notice('No task list found with the name ' + this.settings.googleTaskListName);
         }
         else {
+            new Notice('Task list found');
             this.settings.googleTaskListId = taskListId.value;
             await this.saveSettings();
         }

@@ -70,6 +70,8 @@ export class AuthCodeModal extends Modal {
                     code,
                     this.pluginSettings,
                     this.successCallbackAsync);
+                    
+                this.close();
             } catch (error) {
                 console.error('Error getting tokens:', error);
             }
