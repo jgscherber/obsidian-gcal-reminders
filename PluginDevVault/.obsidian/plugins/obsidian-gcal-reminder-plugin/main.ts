@@ -8,8 +8,6 @@ import {
     Notice,
     Modal
 } from 'obsidian';
-import { google } from 'googleapis';
-import { OAuth2Client } from 'google-auth-library';
 import * as option from 'fp-ts/Option';
 import { format } from 'date-fns';
 import { AuthCodeModal } from 'views/AuthCodeModal'
