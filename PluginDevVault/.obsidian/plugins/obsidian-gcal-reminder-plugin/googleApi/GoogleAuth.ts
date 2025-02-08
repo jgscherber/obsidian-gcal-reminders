@@ -51,7 +51,6 @@ async function generateChallenge(verifier: string): Promise<string> {
 
 
 export function TryGetAccessToken(): option.Option<string> {
-	// TODO calling this thrice in this method????
     //Check if the token exists
 	if (!getAccessToken() || getAccessToken() == "") return option.none;
 
@@ -67,7 +66,7 @@ export function TryGetAccessToken(): option.Option<string> {
 	return option.some(getAccessToken());
 }
 
-const refreshAccessToken = async (settings: IGoogleCalendarPluginSettings)
+const RefreshAccessToken = async (settings: IGoogleCalendarPluginSettings)
     : Promise<option.Option<string>> => {
 
 	// if(lastRefreshTryMoment.diff(window.moment(), "seconds") < 60){
@@ -147,7 +146,7 @@ const exchangeCodeForTokenCustom = async (
  * 
  * @returns A valid access Token
  */
-export async function getGoogleAuthToken(
+export async function GetGoogleAuthToken(
     settings: IGoogleCalendarPluginSettings): Promise<option.Option<string>>
 {
 	// Check if refresh token is set
@@ -157,7 +156,7 @@ export async function getGoogleAuthToken(
 
 	//Check if the Access token is still valid or if it needs to be refreshed
 	if (option.isNone(accessToken)) {
-		accessToken = await refreshAccessToken(settings);		
+		accessToken = await RefreshAccessToken(settings);		
 	}
 
 	// Check if refresh of access token did not work
@@ -177,18 +176,7 @@ export async function StartLoginGoogleMobile(
 		_authSession.challenge = await generateChallenge(_authSession.verifier);
 	}
 
-	// const authUrl = 'https://accounts.google.com/o/oauth2/v2/auth'
-	// + `?client_id=${CLIENT_ID}`
-	// + `&response_type=code`
-	// + `&redirect_uri=${REDIRECT_URL_MOBILE}`
-	// + `&prompt=consent`
-	// + `&access_type=offline`
-	// + `&state=${_authSession.state}`
-	// + `&code_challenge=${_authSession.challenge}`
-	// + `&code_challenge_method=S256`
-	// + `&scope=https://www.googleapis.com/auth/calendar.readonly%20https://www.googleapis.com/auth/calendar.events`;
-
-    const scope = 'https://www.googleapis.com/auth/tasks' // TODO better place
+    const scope = 'https://www.googleapis.com/auth/tasks'
     const authUrl = `https://accounts.google.com/o/oauth2/v2/auth`
         + `?client_id=${settings.googleClientId?.trim()}`
         + `&response_type=code`

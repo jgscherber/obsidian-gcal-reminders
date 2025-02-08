@@ -1,5 +1,3 @@
-import { getGoogleAuthToken } from "../googleApi/GoogleAuth";
-// import GoogleCalendarPlugin from "../GoogleCalendarPlugin";
 import { GoogleApiError } from "../googleApi/GoogleApiError";
 import { requestUrl } from "obsidian";
 // import { log } from "./log";
@@ -9,7 +7,6 @@ export const callRequest = async (
         method: string,
         body: any,
         bearerToken: string,
-        // TODO pass auth settings in here
         noAuth = false): Promise<any> =>
     {
 

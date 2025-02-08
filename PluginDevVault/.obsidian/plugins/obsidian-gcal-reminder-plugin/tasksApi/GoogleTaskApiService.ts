@@ -1,6 +1,6 @@
 import { GoogleApiError } from "googleApi/GoogleApiError";
 import * as option from 'fp-ts/Option';
-import { getGoogleAuthToken } from "googleApi/GoogleAuth";
+import { GetGoogleAuthToken } from "googleApi/GoogleAuth";
 import { callRequest } from "helper/RequestWrapper";
 import { IGoogleCalendarPluginSettings } from "types/IGoogleCalendarPluginSettings";
 import { GoogleTask, GoogleTaskResponse, TaskListsResponse } from "types/types";
@@ -16,7 +16,7 @@ export class GoogleTaskApiService {
     }
 
     async GetTaskListId() : Promise<option.Option<string>> {
-        const bearerTokenOption = await getGoogleAuthToken(this.settings);
+        const bearerTokenOption = await GetGoogleAuthToken(this.settings);
         if (!option.isSome(bearerTokenOption)) {
             return option.none;
         }
@@ -48,7 +48,6 @@ export class GoogleTaskApiService {
     async Create(googleTask: GoogleTask): Promise<GoogleTaskResponse | null> {
         // TODO validate settings
 
-        // TODO pull from settings
         let taskListId = this.settings.googleTaskListId;
         if (!taskListId) {
             const taskListIdOption = await this.GetTaskListId();
@@ -59,7 +58,7 @@ export class GoogleTaskApiService {
             taskListId = taskListIdOption.value;
         }
 
-        const bearerTokenOption = await getGoogleAuthToken(this.settings); // TODO pull from settings
+        const bearerTokenOption = await GetGoogleAuthToken(this.settings);
         if (!option.isSome(bearerTokenOption)) {
             return null;
         }
