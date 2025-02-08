@@ -17,6 +17,7 @@ import { GoogleTaskApiService } from 'tasksApi/GoogleTaskApiService';
 import { TryGetAccessToken } from 'googleApi/GoogleAuth';
 
 export default class GCalReminderPlugin extends Plugin {
+
     settings: IGoogleCalendarPluginSettings;
 
     async onload() {
@@ -233,7 +234,7 @@ class GCalReminderSettingTab extends PluginSettingTab {
             .setName('Authentication')
             .setDesc('Connect to Google Calendar')
             .addButton(button => button
-                .setButtonText(this.plugin.settings.googleRefreshToken ? 'Re-authenticate' : 'Connect to Google Calendar')
+                .setButtonText('Connect')
                 .onClick(() => {
                     if (this.plugin.settings.googleClientId
                         && this.plugin.settings.googleClientSecret)

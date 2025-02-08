@@ -1,15 +1,16 @@
 
 export interface IGoogleCalendarPluginSettings {
-    obsidianTag: string;
+    
     // Authentication settings
-    googleOAuthServer: string;
     googleClientId: string;
     googleClientSecret: string;
-    googleRefreshToken: string;
     
+    // Task List setting
     googleTaskListName: string;
     googleTaskListId: string;
 
+    // Obsidian settings
+    obsidianTag: string;
     obsidianRedirctHelperUrl: string;
 	
     // // Notification settings
