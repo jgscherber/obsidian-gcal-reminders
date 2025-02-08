@@ -20,7 +20,7 @@ import {
 	setRefreshToken,
 } from "../helper/LocalStorage";
 import * as option from 'fp-ts/Option';
-import { Notice, Platform, requestUrl } from "obsidian";s
+import { Notice, Platform, requestUrl } from "obsidian";
 import { createNotice } from '../helper/NoticeHelper';
 // import { log } from '../helper/log';
 import { IGoogleCalendarPluginSettings } from '../types/IGoogleCalendarPluginSettings';
