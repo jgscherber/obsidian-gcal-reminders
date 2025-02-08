@@ -6,7 +6,6 @@ import {
     Setting, 
     TFile,
     Notice,
-    Modal
 } from 'obsidian';
 import * as option from 'fp-ts/Option';
 import { format } from 'date-fns';
@@ -19,16 +18,9 @@ import { TryGetAccessToken } from 'googleApi/GoogleAuth';
 
 export default class GCalReminderPlugin extends Plugin {
     settings: IGoogleCalendarPluginSettings;
-    googleAuth: OAuth2Client;
 
     async onload() {
         await this.loadSettings();
-        
-        if (this.settings.googleClientId
-            && this.settings.googleClientSecret
-            && this.settings.googleRefreshToken) {
-            this.setupGoogleAuth();
-        }
 
         // Add command to create reminder
         this.addCommand({
@@ -55,36 +47,10 @@ export default class GCalReminderPlugin extends Plugin {
         this.addSettingTab(new GCalReminderSettingTab(this.app, this));
     }
 
-    setupGoogleAuth() {
-        this.googleAuth = new google.auth.OAuth2(
-            this.settings.googleClientId,
-            this.settings.googleClientSecret,
-            'urn:ietf:wg:oauth:2.0:oob'  // For manual copy/paste flow ... AKA "out of band" OOB
-        );
-        
-        // TODO: WHATS THIS REFRESH??  
-        if (this.settings.googleRefreshToken) {
-            this.googleAuth.setCredentials({
-                refresh_token: this.settings.googleRefreshToken
-            });
-        }
-    }
-
     InitiateAuth() {
-        // if (!this.googleAuth) {
-        //     this.setupGoogleAuth();
-        // }
-
-        // const authUrl = this.googleAuth.generateAuthUrl({
-        //     access_type: 'offline',
-        //     // TODO: Event vs. Task
-        //     //scope: ['https://www.googleapis.com/auth/calendar'],
-        //     scope: ['https://www.googleapis.com/auth/tasks'],
-        //     prompt: 'consent'
-        // });
-
         async function successCallback() : Promise<any> {
         }
+        
         new AuthCodeModal(
             this.app, 
             this.settings,
@@ -185,37 +151,6 @@ export default class GCalReminderPlugin extends Plugin {
             .replace('#', '')
             .replace('>', '')
             .trim();
-    }
-
-    async createCalendarEvent(
-        date: Date,
-        file: TFile,
-        line: string,
-        blockId: string) : Promise<string>
-    {
-        new Notice("Creating event in Google Calendar");
-        const calendar = google.calendar({ version: 'v3', auth: this.googleAuth });
-        line = this.CleanupReminderSummary(line);
-            
-        const event = await calendar.events.insert({
-            calendarId: 'primary',
-            requestBody: {
-                summary: line.trim() || 'Obsidian Reminder',
-                description: this.createObsidianUrl(file, blockId),
-                start: {
-                    dateTime: date.toISOString(),
-                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-                },
-                end: {
-                    dateTime: new Date(date.getTime() + 30 * 60000).toISOString(),
-                    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone
-                }
-            }
-        });
-
-
-        // Get the calendar URL
-        return event.data.htmlLink || '';
     }
 
     generateBlockId(): string {
