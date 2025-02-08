@@ -6,6 +6,7 @@ export interface IGoogleCalendarPluginSettings {
     googleClientSecret: string;
     googleRefreshToken: string;
     
+    googleTaskListName: string;
     googleTaskListId: string;
 
     obsidianRedirctHelperUrl: string;

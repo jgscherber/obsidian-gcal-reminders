@@ -94,11 +94,14 @@ export default class GCalReminderPlugin extends Plugin {
     }
 
     showDateTimePicker(markdownView: MarkdownView) {
-        new DateTimePickerModal(this.app, async (date) => {
-            if (date) {
-                await this.createReminderWithBlockLink(date, markdownView);
-            }
-        }).open();
+        new DateTimePickerModal(
+            this.app,
+            async (date) =>
+            {
+                if (date) {
+                    await this.createReminderWithBlockLink(date, markdownView);
+                }
+            }).open();
     }
 
     async createReminderWithBlockLink(date: Date, markdownView: MarkdownView) {
@@ -153,7 +156,6 @@ export default class GCalReminderPlugin extends Plugin {
             // }
 
             // TODO real setting
-            this.settings.googleTaskListId = "Obsidian";
             const taskRequest : GoogleTask = {
                 title: line.trim() || 'Obsidian Reminder',
                 notes: this.createObsidianUrl(file, blockId),
@@ -225,6 +227,9 @@ export default class GCalReminderPlugin extends Plugin {
             refreshToken: '',
             obsidianRedirctHelperUrl: ''
         }, await this.loadData());
+
+        // TODO add this to UI
+        this.settings.googleTaskListName = "Obsidian";
     }
 
     async saveSettings() {

@@ -13,18 +13,25 @@ export const callRequest = async (
         noAuth = false): Promise<any> =>
     {
 
-    const requestHeaders: any = { 'Content-Type': 'application/json' };
-    if (noAuth == false) {
-        const bearer = bearerToken;
-        if (!bearer) {
-            throw new GoogleApiError("Error Google API request", 
-                { method, url, body, },
-                401,
-                {error: "Missing Auth Token"}
-            );
+        // Log parameters
+        console.log("URL", url);
+        console.log("Method", method);
+        console.log("Body", body);
+        console.log("Bearer Token", bearerToken);
+        console.log("No Auth", noAuth);
+        
+        const requestHeaders: any = { 'Content-Type': 'application/json' };
+        if (noAuth == false) {
+            const bearer = bearerToken;
+            if (!bearer) {
+                throw new GoogleApiError("Error Google API request", 
+                    { method, url, body, },
+                    401,
+                    {error: "Missing Auth Token"}
+                );
+            }
+            requestHeaders['Authorization'] = 'Bearer ' + bearer;
         }
-        requestHeaders['Authorization'] = 'Bearer ' + bearer;
-    }
 
     //Debugged request
     // if (plugin.settings.debugMode) {
@@ -88,12 +95,14 @@ export const callRequest = async (
             });
         }catch (error) {
             if(response) {
-            throw new GoogleApiError("Error Google API request", 
-                { method, url, body, },
-                response.status,
-                (await response.json()),
-            );
+                console.log("1", response);
+                throw new GoogleApiError("Error Google API request", 
+                    { method, url, body, },
+                    response.status,
+                    (await response.json()),
+                );
             } else {
+                console.log("2", response);
                 throw new GoogleApiError("Error Google API request", 
                 { method, url, body, },
                 500,
@@ -103,7 +112,8 @@ export const callRequest = async (
         }
 
         if (response.status >= 300) {
-            throw new GoogleApiError("Error Google API request", 
+                console.log("3", response);
+                throw new GoogleApiError("Error Google API request", 
                 { method, url, body, },
                 response.status,
                 response.json,

@@ -74,7 +74,8 @@ export function TryGetAccessToken(): option.Option<string> {
 	return option.some(getAccessToken());
 }
 
-const refreshAccessToken = async (settings: IGoogleCalendarPluginSettings): Promise<string | undefined> => {
+const refreshAccessToken = async (settings: IGoogleCalendarPluginSettings)
+    : Promise<option.Option<string>> => {
 
 	// if(lastRefreshTryMoment.diff(window.moment(), "seconds") < 60){
 	// 	return;
@@ -96,13 +97,13 @@ const refreshAccessToken = async (settings: IGoogleCalendarPluginSettings): Prom
 
 	if (!tokenData) {
 		createNotice("Error while refreshing authentication");
-		return;
+		return option.none;
 	}
 	
 	//Save new Access token and Expiration Time
 	setAccessToken(tokenData.access_token);
 	setExpirationTime(+new Date() + tokenData.expires_in * 1000);
-	return tokenData.access_token;
+	return option.some(tokenData.access_token);
 }
 
 // TODO prettier config of braces on own line....
@@ -154,7 +155,7 @@ const exchangeCodeForTokenCustom = async (
  * @returns A valid access Token
  */
 export async function getGoogleAuthToken(
-    settings: IGoogleCalendarPluginSettings): Promise<string | undefined>
+    settings: IGoogleCalendarPluginSettings): Promise<option.Option<string>>
 {
 	// Check if refresh token is set
 	// TODO if (!settingsAreCompleteAndLoggedIn()) returna;
@@ -162,12 +163,12 @@ export async function getGoogleAuthToken(
 	let accessToken = TryGetAccessToken();
 
 	//Check if the Access token is still valid or if it needs to be refreshed
-	if (!accessToken) {
+	if (option.isNone(accessToken)) {
 		accessToken = await refreshAccessToken(settings);		
 	}
 
 	// Check if refresh of access token did not work
-	if(!accessToken) return
+	if(!accessToken) return option.none;
 
 	return accessToken;
 }
