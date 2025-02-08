@@ -6,9 +6,6 @@
 import type { SplitDirection, TFile } from "obsidian";
 import { inherits } from "util";
 
-
-
-
 export interface Template {
 	name: string,
 	insertType: string,

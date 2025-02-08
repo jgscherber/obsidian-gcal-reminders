@@ -19,7 +19,8 @@ import {
 	setExpirationTime,
 	setRefreshToken,
 } from "../helper/LocalStorage";
-import { Notice, Platform, requestUrl } from "obsidian";
+import * as option from 'fp-ts/Option';
+import { Notice, Platform, requestUrl } from "obsidian";s
 import { createNotice } from '../helper/NoticeHelper';
 // import { log } from '../helper/log';
 import { IGoogleCalendarPluginSettings } from '../types/IGoogleCalendarPluginSettings';
@@ -56,21 +57,21 @@ async function generateChallenge(verifier: string): Promise<string> {
 }
 
 
-export function getAccessIfValid(): string | undefined {
+export function TryGetAccessToken(): option.Option<string> {
 	// TODO calling this thrice in this method????
     //Check if the token exists
-	if (!getAccessToken() || getAccessToken() == "") return;
+	if (!getAccessToken() || getAccessToken() == "") return option.none;
 
 	//Check if Expiration time is not set or default 0
-	if (!getExpirationTime()) return;
+	if (!getExpirationTime()) return option.none;
 
 	//Check if Expiration time is set to text
-	if (isNaN(getExpirationTime())) return
+	if (isNaN(getExpirationTime())) return option.none
 
 	//Check if Expiration time is in the past so the token is expired
-	if (getExpirationTime() < +new Date()) return;
+	if (getExpirationTime() < +new Date()) return option.none;
 
-	return getAccessToken();
+	return option.some(getAccessToken());
 }
 
 const refreshAccessToken = async (settings: IGoogleCalendarPluginSettings): Promise<string | undefined> => {
@@ -158,7 +159,7 @@ export async function getGoogleAuthToken(
 	// Check if refresh token is set
 	// TODO if (!settingsAreCompleteAndLoggedIn()) returna;
 
-	let accessToken = getAccessIfValid();
+	let accessToken = TryGetAccessToken();
 
 	//Check if the Access token is still valid or if it needs to be refreshed
 	if (!accessToken) {

@@ -14,7 +14,7 @@ export class GoogleTaskApiService {
         
     }
 
-    async googleCreateEvent(googleTask: GoogleTask): Promise<GoogleTaskResponse | null> {
+    async Create(googleTask: GoogleTask): Promise<GoogleTaskResponse | null> {
         // TODO validate settings
 
         // TODO pull from settings

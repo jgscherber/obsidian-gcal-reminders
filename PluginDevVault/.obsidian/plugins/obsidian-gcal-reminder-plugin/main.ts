@@ -10,12 +10,14 @@ import {
 } from 'obsidian';
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
+import * as option from 'fp-ts/Option';
 import { format } from 'date-fns';
 import { AuthCodeModal } from 'views/AuthCodeModal'
 import { IGoogleCalendarPluginSettings } from 'types/IGoogleCalendarPluginSettings';
 import { DateTimePickerModal } from 'views/DateTimePickerModal';
 import { GoogleTask } from 'types/types';
 import { GoogleTaskApiService } from 'tasksApi/GoogleTaskApiService';
+import { TryGetAccessToken } from 'googleApi/GoogleAuth';
 
 export default class GCalReminderPlugin extends Plugin {
     settings: IGoogleCalendarPluginSettings;
@@ -34,11 +36,12 @@ export default class GCalReminderPlugin extends Plugin {
         this.addCommand({
             id: 'add-gcal-reminder',
             name: 'Add Google Calendar Reminder',
-            checkCallback: (checking: boolean) => {
+            checkCallback: (onlyCheckingContext: boolean) => {
                 const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
                 if (markdownView) {
-                    if (!checking) {
-                        if (!this.settings.googleRefreshToken) {
+                    if (!onlyCheckingContext) {
+                        const tokenOption = TryGetAccessToken();
+                        if (option.isNone(tokenOption)) {
                             new Notice('Please authenticate with Google Calendar in settings first');
                             return;
                         }
@@ -168,10 +171,10 @@ export default class GCalReminderPlugin extends Plugin {
             //     }
             // });
 
-            const task = await taskService.googleCreateEvent(taskRequest);
+            const task = await taskService.Create(taskRequest);
 
             // Get the task URL
-            return task.webViewLink || '';
+            return task?.webViewLink || '';
         }
 
     async createCalendarEvent(
