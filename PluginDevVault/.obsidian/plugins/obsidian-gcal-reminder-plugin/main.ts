@@ -33,6 +33,7 @@ export default class GCalReminderPlugin extends Plugin {
                     if (!onlyCheckingContext) {
                         const tokenOption = TryGetAccessToken();
                         if (option.isNone(tokenOption)) {
+                            // TODO this should just trigger me into the auth flow..........
                             new Notice('Please authenticate with Google Calendar in settings first');
                             return;
                         }
@@ -148,6 +149,7 @@ export default class GCalReminderPlugin extends Plugin {
 
     RemoveMarkdown(line: string)
     {
+        // TODO highlight formatting ==TODO call..........==
         return line
             .replace('-', '')
             .replace('#', '')
