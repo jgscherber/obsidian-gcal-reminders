@@ -26,13 +26,23 @@ export class DateTimePickerModal extends Modal {
         const { contentEl } = this;
         contentEl.empty();
 
+        this.initializeDatePicker(contentEl);
+        //this.initliazeDateTimePicker(contentEl);
+    }
+
+    onClose() {
+        const { contentEl } = this;
+        contentEl.empty();
+    }
+
+    initliazeDateTimePicker(contentEl: HTMLElement) {
         contentEl.createEl('h2', { text: 'Set Reminder Date and Time' });
 
         // Create container for the picker
         const pickerContainer = contentEl.createDiv({ cls: 'datetime-picker-container' });
         
         // Create datetime picker
-        const dateTimeInput = pickerContainer.createEl('input', {
+        const input = pickerContainer.createEl('input', {
             type: 'datetime-local',
             cls: 'datetime-input'
         });
@@ -40,7 +50,7 @@ export class DateTimePickerModal extends Modal {
         // Set default to next hour
         const now = new Date();
         now.setHours(now.getHours() + 1, 0, 0, 0);
-        dateTimeInput.value = now.toISOString().slice(0, 16);
+        input.value = now.toISOString().slice(0, 16);
 
         // Create button container
         const buttonContainer = contentEl.createDiv({ 
@@ -55,7 +65,7 @@ export class DateTimePickerModal extends Modal {
         });
         
         submitBtn.addEventListener('click', () => {
-            const selectedDate = new Date(dateTimeInput.value);
+            const selectedDate = new Date(input.value);
             if (!isNaN(selectedDate.getTime())) {
                 this.close();
                 this.onSubmit(selectedDate);
@@ -66,12 +76,54 @@ export class DateTimePickerModal extends Modal {
 
         // Add some basic styles
         pickerContainer.style.textAlign = 'center';
-        dateTimeInput.style.margin = '20px 0';
-        dateTimeInput.style.padding = '8px';
+        input.style.margin = '20px 0';
+        input.style.padding = '8px';
     }
 
-    onClose() {
-        const { contentEl } = this;
-        contentEl.empty();
+    initializeDatePicker(contentEl: HTMLElement)
+    {
+        contentEl.createEl('h2', { text: 'Set Reminder Date' });
+
+        // Create container for the picker
+        const pickerContainer = contentEl.createDiv({ cls: 'date-picker-container' });
+        
+        // Create date picker (type="date" shows only date selection)
+        const input = pickerContainer.createEl('input', {
+            type: 'date',
+            cls: 'date-input'
+        });
+
+        // Set default to today
+        const now = new Date();
+        input.value = now.toISOString().split('T')[0];
+
+        // Create button container
+        const buttonContainer = contentEl.createDiv({ 
+            cls: 'date-picker-buttons',
+            attr: { style: 'margin-top: 20px;' }
+        });
+
+        // Create submit button
+        const submitBtn = buttonContainer.createEl('button', { 
+            text: 'Create Reminder',
+            cls: 'mod-cta'
+        });
+        
+        submitBtn.addEventListener('click', () => {
+            const selectedDate = new Date(input.value);
+            if (!isNaN(selectedDate.getTime())) {
+                this.close();
+                // Set time to midnight UTC to ensure consistent date handling
+                selectedDate.setUTCHours(0, 0, 0, 0);
+                this.onSubmit(selectedDate);
+            } else {
+                new Notice('Please select a valid date');
+            }
+        });
+
+        // Add some basic styles
+        pickerContainer.style.textAlign = 'center';
+        input.style.margin = '20px 0';
+        input.style.padding = '8px';
     }
 }
