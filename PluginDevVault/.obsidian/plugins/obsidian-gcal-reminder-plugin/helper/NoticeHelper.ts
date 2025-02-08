@@ -1,5 +1,5 @@
 import { Notice } from "obsidian";
-import { log } from "./log";
+// import { log } from "./log";
 
 const noticeMap: Map<string, moment.Moment> = new Map();
 
@@ -18,13 +18,13 @@ export function createNotice(
 
 		const lastDisplay = noticeMap.get(text);
 
-		if (lastDisplay.isBefore(now) || ignoreTimeout) {
+		if (lastDisplay!.isBefore(now) || ignoreTimeout) {
 			new Notice(text);
 			noticeMap.set(text, now.add(1, "minute"))
 		}
 
 	} else {
-		log(text);
+		//log(text);
 		new Notice(text);
 		noticeMap.set(text, now.add(0, "minute"))
 	}

@@ -1,4 +1,4 @@
-
+export {}
 // export class GCalReminderSettingTab extends PluginSettingTab {
 //     plugin: GCalReminderPlugin;
 
