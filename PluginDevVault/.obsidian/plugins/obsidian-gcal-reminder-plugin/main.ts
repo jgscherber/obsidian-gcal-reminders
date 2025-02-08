@@ -156,7 +156,8 @@ export default class GCalReminderPlugin extends Plugin {
     createObsidianUrl(file: TFile, blockId: string): string {
         const filePath = file.path.replace(/#/g, '%23');
         const helperUrl = this.settings.obsidianRedirctHelperUrl;
-        const obsidianUrl = `obsidian://open?vault=${encodeURIComponent(this.app.vault.getName())}&file=${filePath}%23%5E${blockId}`
+        const safeFilePath = encodeURIComponent(filePath);
+        const obsidianUrl = `obsidian://open?vault=${encodeURIComponent(this.app.vault.getName())}&file=${safeFilePath}%23%5E${blockId}`
         return `${helperUrl}?${obsidianUrl}`;
     }
 
