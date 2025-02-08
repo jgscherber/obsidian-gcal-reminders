@@ -1,4 +1,4 @@
 workspace.json
 workspace-mobile.json
-Testing.md
+**/*.md
 manually-copied-build/
