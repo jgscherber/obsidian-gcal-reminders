@@ -3,7 +3,7 @@ import * as option from 'fp-ts/Option';
 import { getGoogleAuthToken } from "googleApi/GoogleAuth";
 import { callRequest } from "helper/RequestWrapper";
 import { IGoogleCalendarPluginSettings } from "types/IGoogleCalendarPluginSettings";
-import { GoogleTask, GoogleTaskResponse } from "types/types";
+import { GoogleTask, GoogleTaskResponse, TaskListsResponse } from "types/types";
 
 export class GoogleTaskApiService {
     settings: IGoogleCalendarPluginSettings;
@@ -15,11 +15,50 @@ export class GoogleTaskApiService {
         
     }
 
+    async GetTaskListId() : Promise<option.Option<string>> {
+        const bearerTokenOption = await getGoogleAuthToken(this.settings);
+        if (!option.isSome(bearerTokenOption)) {
+            return option.none;
+        }
+        // if(taskId === ""){
+        //     throw new GoogleApiError("Could not create Google Event because no default calendar selected in Settings", null, 999, {error: "No calendar set"})    
+        // }
+        const bearerToken = bearerTokenOption.value;
+
+        console.log("Bearer token", bearerToken);
+        const taskListReponse : TaskListsResponse = await callRequest(
+            'https://tasks.googleapis.com/tasks/v1/users/@me/lists',
+            'GET',
+            null,
+            bearerToken);
+
+        const taskListName = this.settings.googleTaskListName;
+        for (const taskList of taskListReponse.items)
+        {
+            if (taskList.title.toLowerCase() === taskListName.toLowerCase())
+            {
+                return option.some(taskList.id);
+            }
+        }
+
+        console.log("No task list found with name", taskListName);
+        return option.none;
+    }
+
     async Create(googleTask: GoogleTask): Promise<GoogleTaskResponse | null> {
         // TODO validate settings
 
         // TODO pull from settings
-        const taskListId = this.settings.googleTaskListId;
+        let taskListId = this.settings.googleTaskListId;
+        if (!taskListId) {
+            const taskListIdOption = await this.GetTaskListId();
+            if (!option.isSome(taskListIdOption)) {
+                return null;
+            }
+
+            taskListId = taskListIdOption.value;
+        }
+
         const bearerTokenOption = await getGoogleAuthToken(this.settings); // TODO pull from settings
         if (!option.isSome(bearerTokenOption)) {
             return null;

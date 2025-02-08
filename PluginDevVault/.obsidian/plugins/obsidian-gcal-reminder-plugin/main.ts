@@ -72,7 +72,7 @@ export default class GCalReminderPlugin extends Plugin {
         }
     }
 
-    initiateAuth() {
+    InitiateAuth() {
         // if (!this.googleAuth) {
         //     this.setupGoogleAuth();
         // }
@@ -134,6 +134,18 @@ export default class GCalReminderPlugin extends Plugin {
         } catch (error) {
             console.error('Failed to create reminder:', error);
             new Notice('Failed to create reminder');
+        }
+    }
+
+    async GetTaskListId() {
+        const taskService = new GoogleTaskApiService(this.settings);
+        const taskListId = await taskService.GetTaskListId();
+        if (!option.isSome(taskListId)) {
+            new Notice('No task list found with the name ' + this.settings.googleTaskListName);
+        }
+        else {
+            this.settings.googleTaskListId = taskListId.value;
+            await this.saveSettings();
         }
     }
 
@@ -292,7 +304,8 @@ class GCalReminderSettingTab extends PluginSettingTab {
                     if (this.plugin.settings.googleClientId
                         && this.plugin.settings.googleClientSecret)
                     {
-                        this.plugin.initiateAuth();
+                        this.plugin.InitiateAuth();
+                        this.plugin.GetTaskListId();
                     }
                     else
                     {

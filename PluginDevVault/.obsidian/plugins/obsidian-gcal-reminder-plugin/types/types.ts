@@ -13,6 +13,21 @@ export interface Template {
 	tableOptions: string[], //Object paths from event
 }
 
+export interface TaskList {
+    kind: 'tasks#taskList';
+    id: string;
+    etag: string;
+    title: string;
+    updated: string;  // ISO 8601 date string
+    selfLink: string;
+  }
+
+export interface TaskListsResponse {
+    kind: 'tasks#taskLists';
+    etag: string;
+    items: TaskList[];
+}
+
 export interface GoogleCalendar {
 	kind: "calendar#calendarListEntry";
 	etag: string;
