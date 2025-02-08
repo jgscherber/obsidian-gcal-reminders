@@ -124,8 +124,14 @@ export default class GCalReminderPlugin extends Plugin {
         line: string,
         blockId: string) : Promise<string>
     {
-        line = this.CleanupReminderSummary(line).trim();
-        const title = line || file.basename
+        line = this.RemoveMarkdown(line).trim();
+        let title = file.basename
+        if (line)
+        {
+            // TODO maybe if no line, use the parent header?? then header reminds wouldn't need to be in the header itself
+            title = `${title}: ${line}`;
+        }
+
         const taskRequest : GoogleTask = {
             title: title,
             notes: this.createObsidianUrl(file, blockId),
@@ -140,7 +146,7 @@ export default class GCalReminderPlugin extends Plugin {
         return task?.webViewLink || '';
     }
 
-    CleanupReminderSummary(line: string)
+    RemoveMarkdown(line: string)
     {
         return line
             .replace('-', '')
