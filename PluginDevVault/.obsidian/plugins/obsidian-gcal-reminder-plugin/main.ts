@@ -14,7 +14,7 @@ import { IGoogleCalendarPluginSettings } from 'types/IGoogleCalendarPluginSettin
 import { DateTimePickerModal } from 'views/DateTimePickerModal';
 import { GoogleTask } from 'types/types';
 import { GoogleTaskApiService } from 'tasksApi/GoogleTaskApiService';
-import { TryGetAccessToken } from 'googleApi/GoogleAuth';
+import { GetGoogleAuthToken, TryGetAccessToken } from 'googleApi/GoogleAuth';
 
 export default class GCalReminderPlugin extends Plugin {
 
@@ -22,6 +22,7 @@ export default class GCalReminderPlugin extends Plugin {
 
     async onload() {
         await this.loadSettings();
+        await GetGoogleAuthToken(this.settings);
 
         // Add command to create reminder
         this.addCommand({

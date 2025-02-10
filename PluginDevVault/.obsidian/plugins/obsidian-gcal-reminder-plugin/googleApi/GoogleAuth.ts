@@ -6,19 +6,7 @@
 	and refresh the access token if needed 
 */
 
-
-
-// import {
-// 	settingsAreCompleteAndLoggedIn,
-// } from "../view/GoogleCalendarSettingTab";
-import {
-	getAccessToken,
-	getExpirationTime,
-	getRefreshToken,
-	setAccessToken,
-	setExpirationTime,
-	setRefreshToken,
-} from "../helper/LocalStorage";
+import * as storage from "../helper/LocalStorage";
 import * as option from 'fp-ts/Option';
 import { Notice, Platform, requestUrl } from "obsidian";
 import { createNotice } from '../helper/NoticeHelper';
@@ -52,18 +40,18 @@ async function generateChallenge(verifier: string): Promise<string> {
 
 export function TryGetAccessToken(): option.Option<string> {
     //Check if the token exists
-	if (!getAccessToken() || getAccessToken() == "") return option.none;
+	if (!storage.getAccessToken() || storage.getAccessToken() == "") return option.none;
 
 	//Check if Expiration time is not set or default 0
-	if (!getExpirationTime()) return option.none;
+	if (!storage.getExpirationTime()) return option.none;
 
 	//Check if Expiration time is set to text
-	if (isNaN(getExpirationTime())) return option.none
+	if (isNaN(storage.getExpirationTime())) return option.none
 
 	//Check if Expiration time is in the past so the token is expired
-	if (getExpirationTime() < +new Date()) return option.none;
+	if (storage.getExpirationTime() < +new Date()) return option.none;
 
-	return option.some(getAccessToken());
+	return option.some(storage.getAccessToken());
 }
 
 const RefreshAccessToken = async (settings: IGoogleCalendarPluginSettings)
@@ -77,7 +65,7 @@ const RefreshAccessToken = async (settings: IGoogleCalendarPluginSettings)
 		grant_type: "refresh_token",
 		client_id: settings.googleClientId?.trim(),
 		client_secret: settings.googleClientSecret?.trim(),
-		refresh_token: getRefreshToken(),
+		refresh_token: storage.getRefreshToken(),
 	};
 
 	const {json: tokenData} = await requestUrl({
@@ -93,9 +81,16 @@ const RefreshAccessToken = async (settings: IGoogleCalendarPluginSettings)
 	}
 	
 	//Save new Access token and Expiration Time
-	setAccessToken(tokenData.access_token);
-	setExpirationTime(+new Date() + tokenData.expires_in * 1000);
+	storage.setAccessToken(tokenData.access_token);
+    SetExpirationTime(tokenData.expires_in);
 	return option.some(tokenData.access_token);
+}
+
+function SetExpirationTime(expiresIn: number)
+{
+    const expirationTime = +new Date() + expiresIn * 1000;
+    new Notice(`New expiration time: ${new Date(expirationTime).toLocaleString()}`);
+	storage.setExpirationTime(expirationTime);
 }
 
 // TODO prettier config of braces on own line....
@@ -202,9 +197,9 @@ export async function FinishLoginGoogleMobile(
         userProvidedCode);
 
 	if(token?.refresh_token) {
-		setRefreshToken(token.refresh_token);
-		setAccessToken(token.access_token);
-		setExpirationTime(+new Date() + token.expires_in * 1000);
+		storage.setRefreshToken(token.refresh_token);
+		storage.setAccessToken(token.access_token);
+		storage.setExpirationTime(+new Date() + token.expires_in * 1000);
 
 		new Notice("Login successful!");
 		successCallback();
