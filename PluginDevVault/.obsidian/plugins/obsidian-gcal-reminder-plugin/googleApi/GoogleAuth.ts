@@ -66,6 +66,7 @@ const RefreshAccessToken = async (settings: IGoogleCalendarPluginSettings)
 		client_id: settings.googleClientId?.trim(),
 		client_secret: settings.googleClientSecret?.trim(),
 		refresh_token: storage.getRefreshToken(),
+        expires_in: 60 * 60 * 12 // seconda, max 12 hours??
 	};
 
 	const {json: tokenData} = await requestUrl({
@@ -98,20 +99,6 @@ const exchangeCodeForTokenCustom = async (
     settings: IGoogleCalendarPluginSettings,
     userProvidedCode: string): Promise<any> =>
 {
-	// const url = `https://oauth2.googleapis.com/token`
-    //     + `?grant_type=authorization_code`
-    //     + `&client_id=${settings.googleClientId?.trim()}`
-    //     + `&client_secret=${settings.googleClientSecret?.trim()}`
-    //     + `&code_verifier=${verifier}`
-    //     + `&code=${code}`
-    //     + `&state=${state}`
-    //     + `&redirect_uri=${isMobile ? REDIRECT_URL_MOBILE :REDIRECT_URL}`
-
-	// const response = await fetch(url,{
-	// 	method: 'POST',
-	// 	headers: {'content-type': 'application/x-www-form-urlencoded'},
-	// });
-
     const tokenUrl = 'https://oauth2.googleapis.com/token';
     const params = new URLSearchParams({
         code: userProvidedCode,
@@ -120,6 +107,7 @@ const exchangeCodeForTokenCustom = async (
         redirect_uri: 'urn:ietf:wg:oauth:2.0:oob',
         grant_type: 'authorization_code',
         code_verifier: _authSession.verifier,
+        expires_in: `${60*60*12}`, // seconds, max 12 hours?? IDK
     });
 
     const response = await fetch(tokenUrl, {
@@ -199,7 +187,7 @@ export async function FinishLoginGoogleMobile(
 	if(token?.refresh_token) {
 		storage.setRefreshToken(token.refresh_token);
 		storage.setAccessToken(token.access_token);
-		storage.setExpirationTime(+new Date() + token.expires_in * 1000);
+        SetExpirationTime(token.expires_in);
 
 		new Notice("Login successful!");
 		successCallback();

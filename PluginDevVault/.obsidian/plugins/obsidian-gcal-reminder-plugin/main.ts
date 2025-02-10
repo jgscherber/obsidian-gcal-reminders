@@ -22,7 +22,7 @@ export default class GCalReminderPlugin extends Plugin {
 
     async onload() {
         await this.loadSettings();
-        await GetGoogleAuthToken(this.settings);
+        // await GetGoogleAuthToken(this.settings); // Causes app to fail to load if 400 error
 
         // Add command to create reminder
         this.addCommand({
