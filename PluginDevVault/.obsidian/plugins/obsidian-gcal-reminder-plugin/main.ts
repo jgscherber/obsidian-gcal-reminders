@@ -96,7 +96,7 @@ export default class GCalReminderPlugin extends Plugin {
                 do
                 {
                     testLine = editor.getLine(currentLineNum);
-                    if (lineText.startsWith('#')) {
+                    if (testLine.startsWith('#')) {
                         lineText = this.RemoveMarkdown(testLine);
                         break;
                     }
