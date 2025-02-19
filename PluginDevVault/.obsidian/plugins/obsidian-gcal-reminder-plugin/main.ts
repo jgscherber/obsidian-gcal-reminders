@@ -22,7 +22,6 @@ export default class GCalReminderPlugin extends Plugin {
 
     async onload() {
         await this.loadSettings();
-        //await GetGoogleAuthToken(this.settings); // Causes app to fail to load if 400 error
 
         // Add command to create reminder
         this.addCommand({
@@ -87,16 +86,33 @@ export default class GCalReminderPlugin extends Plugin {
             
             // Get current cursor position and line content
             const cursor = editor.getCursor();
-            const line = editor.getLine(cursor.line);
+            cursor.line
+
+            let lineText = editor.getLine(cursor.line);
+            lineText = this.RemoveMarkdown(lineText);
+            if (lineText.length === 0) {
+                // Line is empty so try getting nearest header
+                let currentLineNum = cursor.line;
+                do
+                {
+                    let testLine = editor.getLine(currentLineNum);
+                    if (lineText.startsWith('#')) {
+                        lineText = this.RemoveMarkdown(testLine);
+                        break;
+                    }
+                    currentLineNum--;
+                } while (currentLineNum >= 0)
+            }
             
             // Create Google Calendar event
             //const calendarUrl = await this.createCalendarEvent(date, file, line, blockId);
-            const calendarUrl = await this.CreateTask(date, file, line, blockId);
+            const calendarUrl = await this.CreateTask(date, file, lineText, blockId);
             
             // Update the line with the new format: text #reminder [datetime](gcal_URL) ^blockId
-            const formattedDateTime = format(date, 'yyyy-MM-dd HH:mm');
+            //const formattedDateTime = format(date, 'yyyy-MM-dd HH:mm');
+            const formattedDateTime = format(date, 'yyyy-MM-dd');
             const reminderTag = this.settings.obsidianTag;
-            const updatedLine = `${line} #${reminderTag} [${formattedDateTime}](${calendarUrl}) ^${blockId}`;
+            const updatedLine = `${lineText} #${reminderTag} [${formattedDateTime}](${calendarUrl}) ^${blockId}`;
             editor.setLine(cursor.line, updatedLine);
 
             new Notice('Reminder created successfully!');
@@ -127,11 +143,9 @@ export default class GCalReminderPlugin extends Plugin {
         line: string,
         blockId: string) : Promise<string>
     {
-        line = this.RemoveMarkdown(line).trim();
         let title = file.basename
         if (line)
         {
-            // TODO maybe if no line, use the parent header?? then header reminds wouldn't need to be in the header itself
             title = `${title}: ${line}`;
         }
 
@@ -151,11 +165,12 @@ export default class GCalReminderPlugin extends Plugin {
 
     RemoveMarkdown(line: string)
     {
-        // TODO highlight formatting ==TODO call..........==
+        console.log(line);
         return line
             .replace('-', '')
             .replace('#', '')
             .replace('>', '')
+            .replace('==', '')
             .trim();
     }
 
