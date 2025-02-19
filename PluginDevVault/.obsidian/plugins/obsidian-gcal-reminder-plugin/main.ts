@@ -88,11 +88,12 @@ export default class GCalReminderPlugin extends Plugin {
             const cursor = editor.getCursor();
             cursor.line
 
-            let lineText = editor.getLine(cursor.line);
+            const originalText = editor.getLine(cursor.line);
+            let lineText = originalText;
             let testLine = this.RemoveMarkdown(lineText);
-            if (testLine.length === 0) {
+            if (testLine.length === 0 && cursor.line > 0) {
                 // Line is empty so try getting nearest header
-                let currentLineNum = cursor.line;
+                let currentLineNum = cursor.line - 1;
                 do
                 {
                     testLine = editor.getLine(currentLineNum);
@@ -112,7 +113,7 @@ export default class GCalReminderPlugin extends Plugin {
             //const formattedDateTime = format(date, 'yyyy-MM-dd HH:mm');
             const formattedDateTime = format(date, 'yyyy-MM-dd');
             const reminderTag = this.settings.obsidianTag;
-            const updatedLine = `${lineText} #${reminderTag} [${formattedDateTime}](${calendarUrl}) ^${blockId}`;
+            const updatedLine = `${originalText} #${reminderTag} [${formattedDateTime}](${calendarUrl}) ^${blockId}`;
             editor.setLine(cursor.line, updatedLine);
 
             new Notice('Reminder created successfully!');
