@@ -89,13 +89,13 @@ export default class GCalReminderPlugin extends Plugin {
             cursor.line
 
             let lineText = editor.getLine(cursor.line);
-            lineText = this.RemoveMarkdown(lineText);
-            if (lineText.length === 0) {
+            let testLine = this.RemoveMarkdown(lineText);
+            if (testLine.length === 0) {
                 // Line is empty so try getting nearest header
                 let currentLineNum = cursor.line;
                 do
                 {
-                    let testLine = editor.getLine(currentLineNum);
+                    testLine = editor.getLine(currentLineNum);
                     if (lineText.startsWith('#')) {
                         lineText = this.RemoveMarkdown(testLine);
                         break;
@@ -135,8 +135,6 @@ export default class GCalReminderPlugin extends Plugin {
         }
     }
 
-
-
     async CreateTask(
         date: Date,
         file: TFile,
@@ -144,6 +142,7 @@ export default class GCalReminderPlugin extends Plugin {
         blockId: string) : Promise<string>
     {
         let title = file.basename
+        line = this.RemoveMarkdown(line);
         if (line)
         {
             title = `${title}: ${line}`;
