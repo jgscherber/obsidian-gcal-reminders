@@ -22,7 +22,7 @@ export default class GCalReminderPlugin extends Plugin {
 
     async onload() {
         await this.loadSettings();
-        // await GetGoogleAuthToken(this.settings); // Causes app to fail to load if 400 error
+        //await GetGoogleAuthToken(this.settings); // Causes app to fail to load if 400 error
 
         // Add command to create reminder
         this.addCommand({
@@ -32,13 +32,14 @@ export default class GCalReminderPlugin extends Plugin {
                 const markdownView = this.app.workspace.getActiveViewOfType(MarkdownView);
                 if (markdownView) {
                     if (!onlyCheckingContext) {
-                        const tokenOption = TryGetAccessToken();
-                        if (option.isNone(tokenOption)) {
-                            // TODO this should just trigger me into the auth flow..........
-                            new Notice('Please authenticate with Google Calendar in settings first');
-                            return;
-                        }
-                        this.showDateTimePicker(markdownView);
+                        (async () => {
+                            let tokenOption = await GetGoogleAuthToken(this.settings);
+                            if (option.isNone(tokenOption)) {
+                                new Notice('Please authenticate with Google Calendar in settings first');
+                                return;
+                            }
+                            this.showDateTimePicker(markdownView);
+                        })();
                     }
                     return true;
                 }
