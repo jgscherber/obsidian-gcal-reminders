@@ -89,16 +89,15 @@ export default class GCalReminderPlugin extends Plugin {
             cursor.line
 
             const originalText = editor.getLine(cursor.line);
-            let lineText = originalText;
-            let testLine = this.RemoveMarkdown(lineText);
-            if (testLine.length === 0 && cursor.line > 0) {
+            let lineText = this.RemoveMarkdown(originalText);
+            if (lineText.length === 0 && cursor.line > 0) {
                 // Line is empty so try getting nearest header
                 let currentLineNum = cursor.line - 1;
                 do
                 {
-                    testLine = editor.getLine(currentLineNum);
-                    if (testLine.startsWith('#')) {
-                        lineText = this.RemoveMarkdown(testLine);
+                    lineText = editor.getLine(currentLineNum);
+                    if (lineText.startsWith('#')) {
+                        lineText = this.RemoveMarkdown(lineText);
                         break;
                     }
                     currentLineNum--;
