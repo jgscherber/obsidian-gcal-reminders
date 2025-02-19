@@ -166,10 +166,10 @@ export default class GCalReminderPlugin extends Plugin {
     {
         console.log(line);
         return line
-            .replace('-', '')
-            .replace('#', '')
+            .replace('-', '')            
             .replace('>', '')
-            .replace('==', '')
+            .replaceAll('#', '')
+            .replaceAll('==', '')
             .trim();
     }
 
